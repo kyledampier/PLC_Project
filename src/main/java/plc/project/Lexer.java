@@ -1,5 +1,7 @@
 package plc.project;
 
+import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -29,7 +31,18 @@ public final class Lexer {
      * whitespace where appropriate.
      */
     public List<Token> lex() {
-        throw new UnsupportedOperationException(); //TODO
+        List<Token> tokens = new ArrayList<>();
+        while(chars.has(0)) {
+//            String current = String.valueOf((chars.get(chars.index)));
+
+            if(peek(" ") || peek("\b") || peek("\n") || peek("\r") || peek("\t")) { // whitespace
+                chars.skip();
+            } else {
+                tokens.add(lexToken());
+            }
+        }
+        return tokens;
+//        throw new UnsupportedOperationException(); //TODO
     }
 
     /**
@@ -41,30 +54,71 @@ public final class Lexer {
      * by {@link #lex()}
      */
     public Token lexToken() {
+        String whitespace = "[ \b\n\r\t]";
+        String identifier = "[A-Za-z_]";
+        String number = "[\\+\\-]? [0-9]+";
+        String escape = "\\[bnrt'\"\\]";
+        String character = "['] ([^'\n\r\\] | "+escape+") [']";
+        String operator = "[^"+whitespace+identifier+number+escape+character+"]";
+        if(peek(identifier)) { // identifier
+            return lexIdentifier();
+        }
+        else if(peek(number)) { // number
+            return lexNumber();
+        }
+        else if(peek(character)) {
+            return lexCharacter();
+        }
+        else if(peek("\"")) {
+            return lexString();
+        }
+        else if(peek(operator)) {
+            return lexOperator();
+        }
         throw new UnsupportedOperationException(); //TODO
     }
 
     public Token lexIdentifier() {
-        throw new UnsupportedOperationException(); //TODO
+        System.out.println("Identifier found");
+        int index = chars.index; // token starts at this index
+        StringBuilder literal = new StringBuilder();
+
+        literal.append(chars.get(0));
+        match("[A-Za-z_]"); // matches the first character for an Identifier
+
+        if(peek("[A-Za-z0-9_-]")) { // ensures the next character is valid for an Identifier without advancing
+            do {
+                if(chars.has(0))
+                    literal.append(chars.get(0)); // builds the token
+            }
+            while(match("[A-Za-z0-9_-]")); // ensures the next character is valid and advances past the current
+        }
+        return new Token(Token.Type.IDENTIFIER, literal.toString(), index);
+//        throw new UnsupportedOperationException(); //TODO
     }
 
     public Token lexNumber() {
+        System.out.println("Number found");
         throw new UnsupportedOperationException(); //TODO
     }
 
     public Token lexCharacter() {
+        System.out.println("Character found");
         throw new UnsupportedOperationException(); //TODO
     }
 
     public Token lexString() {
+        System.out.println("String found");
         throw new UnsupportedOperationException(); //TODO
     }
 
     public void lexEscape() {
+        System.out.println("Escape found");
         throw new UnsupportedOperationException(); //TODO
     }
 
     public Token lexOperator() {
+        System.out.println("Operator found");
         throw new UnsupportedOperationException(); //TODO
     }
 
