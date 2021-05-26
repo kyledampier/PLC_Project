@@ -20,16 +20,16 @@ Class project for: **COP4020**
  
 #### Examples
 
-LET x = 5;
- - Token(IDENTIFIER, "LET", 0)
- - Token(IDENTIFIER, "x", 4)
- - Token(OPERATOR, "=", 6)
- - Token(INTEGER, "5", 8)
- - Token(OPERATOR, ";", 9)
+`LET x = 5;`
+ - `Token(IDENTIFIER, "LET", 0)`
+ - `Token(IDENTIFIER, "x", 4)`
+ - `Token(OPERATOR, "=", 6)`
+ - `Token(INTEGER, "5", 8)`
+ - `Token(OPERATOR, ";", 9)`
 
-print("Hello, World!");
- - Token(IDENTIFIER, "print", 0)
- - Token(OPERATOR, "(", 5)
- - Token(STRING, "\"Hello, World!\"", 6)
- - Token(OPERATOR, ")", 21)
- - Token(OPERATOR, ";", 22)
+`print("Hello, World!");`
+ - `Token(IDENTIFIER, "print", 0)`
+ - `Token(OPERATOR, "(", 5)`
+ - `Token(STRING, "\"Hello, World!\"", 6)`
+ - `Token(OPERATOR, ")", 21)`
+ - `Token(OPERATOR, ";", 22)`
