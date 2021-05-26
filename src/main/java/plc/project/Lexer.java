@@ -56,10 +56,12 @@ public final class Lexer {
     public Token lexToken() {
         String whitespace = "[ \b\n\r\t]";
         String identifier = "[A-Za-z_]";
-        String number = "[\\+\\-]? [0-9]+";
-        String escape = "\\[bnrt'\"\\]";
-        String character = "['] ([^'\n\r\\] | "+escape+") [']";
-        String operator = "[^"+whitespace+identifier+number+escape+character+"]";
+        String sign = "[\\+-]?";
+        String number = "[0-9]+";
+        String escape = "\\\\[bnrt'\"\\\\]";
+        String character = "'";
+        String operator = "([<>!=] '='?|(.))";
+
         if(peek(identifier)) { // identifier
             return lexIdentifier();
         }
@@ -99,17 +101,68 @@ public final class Lexer {
 
     public Token lexNumber() {
         System.out.println("Number found");
+        if (peek("[\\+-]")) {
+            match("[\\+-]");
+        }
+
+        if (peek("[0-9]")) {
+            while (match("[0-9]")); // Go until decimal
+
+            if (peek("\\.", "[0-9]+")) {
+                match("\\."); // match decimal
+                while (match("[0-9]")); // Go until not number
+                return chars.emit(Token.Type.DECIMAL);
+            } else {
+                return chars.emit(Token.Type.INTEGER);
+            }
+        }
         throw new UnsupportedOperationException(); //TODO
     }
 
     public Token lexCharacter() {
         System.out.println("Character found");
-        throw new UnsupportedOperationException(); //TODO
+        match("'");
+
+        String escape = "[bnrt'\"\\\\]";
+        String availableChars = "([^'\\n\\r])";
+
+        if (peek("\\\\", escape, "'")) {
+
+            match("\\\\", escape, "'");
+            return chars.emit(Token.Type.CHARACTER);
+
+        } else if (peek(availableChars, "'")) {
+
+            match(availableChars, "'");
+            return chars.emit(Token.Type.CHARACTER);
+
+        }
+
+        throw new plc.project.ParseException("invalid character", chars.index); //TODO
     }
 
     public Token lexString() {
         System.out.println("String found");
-        throw new UnsupportedOperationException(); //TODO
+        match("\"");
+        String escape = "[bnrt'\"\\\\]";
+        String exceptedChars = "[^\\\\\"\\n\\r]";
+
+        while (!peek("\"")) {
+            if (peek("\\\\")) {
+                match("\\\\");
+                if (peek(escape))
+                    match(escape);
+                else
+                    throw new plc.project.ParseException("invalid escape character", chars.index);
+            } else if (peek(exceptedChars)) {
+                match(exceptedChars);
+            } else {
+                throw new plc.project.ParseException("invalid string", chars.index);
+            }
+        }
+        // End of String found
+        match("\"");
+        return chars.emit(Token.Type.STRING);
     }
 
     public void lexEscape() {
