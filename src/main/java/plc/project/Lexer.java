@@ -35,6 +35,9 @@ public final class Lexer {
         while(chars.has(0)) {
             if(!(match(" ") || match("\b") || match("\n") || match("\r") || match("\t"))) // checks whitespace
                 tokens.add(lexToken());
+            else {
+                chars.skip();
+            }
         }
         return tokens;
 //        throw new UnsupportedOperationException(); //TODO
@@ -76,20 +79,9 @@ public final class Lexer {
 
     public Token lexIdentifier() {
         System.out.println("Identifier found");
-        int index = chars.index; // token starts at this index
-        StringBuilder literal = new StringBuilder();
-
-        literal.append(chars.get(0));
         match("[A-Za-z_]"); // matches the first character for an Identifier
-
-        if(peek("[A-Za-z0-9_-]")) { // ensures the next character is valid for an Identifier without advancing
-            do {
-                if(chars.has(0))
-                    literal.append(chars.get(0)); // builds the token
-            }
-            while(match("[A-Za-z0-9_-]")); // ensures the next character is valid and advances past the current
-        }
-        return new Token(Token.Type.IDENTIFIER, literal.toString(), index);
+        while(match("[A-Za-z0-9_-]")); // ensures the next character is valid and advances past the current
+        return chars.emit(Token.Type.IDENTIFIER);
     }
 
     public Token lexNumber() {
