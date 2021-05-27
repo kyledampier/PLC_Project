@@ -119,8 +119,15 @@ public final class Lexer {
                 lexEscape();
             else
                 match(acceptedChars);
-            match("'");
-            return chars.emit(Token.Type.CHARACTER);
+
+            // Check for closing
+            if (peek("'")) {
+                match("'");
+                return chars.emit(Token.Type.CHARACTER);
+            } else {
+                throw new plc.project.ParseException("expected closing character quote", chars.index);
+            }
+
         }
 
         throw new plc.project.ParseException("invalid character", chars.index); //TODO
@@ -149,8 +156,11 @@ public final class Lexer {
 
     public void lexEscape() {
         System.out.println("Escape found");
-        if(!match("\\\\", "[bnrt'\"\\\\]")) {
-            throw new plc.project.ParseException("invalid escape character", chars.index);
+        if (!match("\\\\")) {
+            throw new plc.project.ParseException("invalid escape sequence", chars.index);
+        } else {
+            if (!match("[bnrt'\"\\\\]"))
+                throw new plc.project.ParseException("invalid escape character", chars.index);
         }
     }
 
