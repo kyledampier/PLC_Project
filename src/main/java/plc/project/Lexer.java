@@ -59,7 +59,7 @@ public final class Lexer {
         if(peek(identifier)) { // identifier
             return lexIdentifier();
         }
-        else if(peek(number)) { // number
+        else if(peek(sign, number) || peek(number)) { // number
             return lexNumber();
         }
         else if(peek(character)) {
@@ -94,6 +94,7 @@ public final class Lexer {
 
     public Token lexNumber() {
         System.out.println("Number found");
+
         if (peek("[\\+-]")) {
             match("[\\+-]");
         }
@@ -101,10 +102,14 @@ public final class Lexer {
         if (peek("[0-9]")) {
             while (match("[0-9]")); // Match until decimal
 
-            if (peek("\\.", "[0-9]+")) {
-                match("\\."); // match decimal
-                while (match("[0-9]")); // Match until NaN
-                return chars.emit(Token.Type.DECIMAL);
+            if (peek("\\.")) {
+                match("\\.");// match decimal
+                if (peek("[0-9]+")) {
+                    while (match("[0-9]")); // Match until NaN
+                    return chars.emit(Token.Type.DECIMAL);
+                } else {
+                    throw new plc.project.ParseException("Trailing decimal", chars.index);
+                }
             } else {
                 return chars.emit(Token.Type.INTEGER);
             }
