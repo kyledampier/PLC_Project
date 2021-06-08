@@ -2,10 +2,7 @@ package plc.project;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * The parser takes the sequence of tokens emitted by the lexer and turns that
@@ -230,7 +227,7 @@ public final class Parser {
               name = tokens.get(-1).getLiteral();
 
               // Identifier found
-              if (!peek('(')) {
+              if (!peek("(")) {
                   // No expression after
                   return new Ast.Expr.Access(Optional.empty(), name);
 
@@ -240,12 +237,12 @@ public final class Parser {
                   Ast.Expr initArgsExpr = parseExpression();
                   args.add(initArgsExpr);
 
-                  while (match(',')) {
+                  while (match(",")) {
                       args.add(parseExpression());
                   }
 
                   // Check for closing parentheses
-                  if(!match(')')) {
+                  if(!match(")")) {
                       throw new ParseException("Invalid function closing parentheses not found", tokens.get(0).getIndex());
                   }
               }
@@ -290,13 +287,13 @@ public final class Parser {
             // STRING LITERAL FOUND
             // "example string"
             String str = tokens.get(-1).getLiteral();
-            str = str.substring(1, str.length() - 2);
+            str = str.substring(1, str.length() - 1);
             return new Ast.Expr.Literal(str);
         } else if (match(Token.Type.IDENTIFIER)) {
             // IDENTIFIER FOUND
             String name = tokens.get(-1).getLiteral();
 
-            if (!peek('(')) {
+            if (!match("(")) {
                 // No expression after
                 // TODO: Fill out Optional
                 return new Ast.Expr.Access(Optional.empty(), name);
@@ -304,24 +301,33 @@ public final class Parser {
             } else {
 
                 // Found expression after
-                Ast.Expr initalExpr = parseExpression();
-                List<Ast.Expr> args = new ArrayList<Ast.Expr>();
-                args.add(initalExpr);
+                if (!peek(")")) {
+                    Ast.Expr initalExpr = parseExpression();
+                    List<Ast.Expr> args = new ArrayList<Ast.Expr>();
+                    args.add(initalExpr);
 
-                while (match(',')) {
-                    args.add(parseExpression());
-                }
+                    while (match(",")) {
+                        args.add(parseExpression());
+                    }
 
-                // Check for closing parentheses
-                if (match(')')) {
-                    // TODO: Fill out Optional
-                    return new Ast.Expr.Function(Optional.empty(), name, args);
+                    // Check for closing parentheses
+                    if (match(")")) {
+                        // TODO: Fill out Optional
+                        return new Ast.Expr.Function(Optional.empty(), name, args);
+                    } else {
+                        throw new ParseException("Invalid function closing parentheses not found", tokens.get(0).getIndex());
+                    }
                 } else {
-                    throw new ParseException("Invalid function closing parentheses not found", tokens.get(0).getIndex());
+                    if (!match(")")) {
+                        throw new ParseException("Invalid function closing parentheses not found", tokens.get(0).getIndex());
+                    } else {
+                        return new Ast.Expr.Function(Optional.empty(), name, Arrays.asList());
+                    }
                 }
+
 
             }
-        } else if (match('(')) {
+        } else if (match("(")) {
             Ast.Expr expr = parseExpression();
             if (!match(')')) {
                 throw new ParseException("Expected closing parenthesis", -1);
@@ -352,12 +358,12 @@ public final class Parser {
                    return false;
                }
            } else if (patterns[i] instanceof String) {
-               if (patterns[i].equals(tokens.get(i).getLiteral())) {
+               if (!patterns[i].equals(tokens.get(i).getLiteral())) {
                    return false;
                }
            } else {
-               throw new AssertionError("Invalid pattern object:"
-                                            + patterns.getClass());
+               throw new AssertionError("Invalid pattern object: "
+                                            + patterns[i].getClass());
            }
         }
         return true;
