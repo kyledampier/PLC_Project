@@ -54,7 +54,21 @@ public final class Parser {
      */
     public Ast.Stmt parseStatement() throws ParseException {
         try {
-            return new Ast.Stmt.Expression(parseExpression());
+            Ast.Stmt.Expr lhs = parseExpression();
+            if (!match("=")) {
+                if (!match(";")) {
+                    throw new ParseException("Expected semicolon", tokens.get(0).getIndex());
+                }
+                return new Ast.Stmt.Expression(lhs);
+            }
+
+            Ast.Stmt.Expr rhs = parseExpression();
+
+            if (!match(";")) {
+                throw new ParseException("Expected semicolon", tokens.get(0).getIndex());
+            }
+            return new Ast.Stmt.Assignment(lhs, rhs);
+
         } catch (ParseException p) {
             throw new ParseException(p.getMessage(), p.getIndex());
         }
@@ -292,7 +306,6 @@ public final class Parser {
         } else if (match(Token.Type.IDENTIFIER)) {
             // IDENTIFIER FOUND
             String name = tokens.get(-1).getLiteral();
-
             if (!match("(")) {
                 // No expression after
                 // TODO: Fill out Optional
