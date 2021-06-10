@@ -313,7 +313,6 @@ public final class Parser {
               reciever = tokens.get(-1).getLiteral();
 
               if (!match("(")) { // No expression after
-//                  return new Ast.Expr.Access(Optional.empty(), reciever);
                   initialExpr = new Ast.Expr.Access(Optional.of(initialExpr), reciever);
               } else {
                   // Found '('
@@ -331,12 +330,9 @@ public final class Parser {
               }
           }
 
-          if (args.size() > 0 && Objects.nonNull(reciever)) {
+          if (Objects.nonNull(reciever)) {
               return new Ast.Expr.Function(Optional.of(initialExpr), reciever, args);
           }
-//          else if(tokens.get(-1).getLiteral().equals(")")) {
-//              return new Ast.Expr.Function(Optional.of(initialExpr), reciever, args);
-//          }
           return initialExpr;
 
         } catch (ParseException p) {
@@ -351,53 +347,46 @@ public final class Parser {
      * not strictly necessary.
      */
     public Ast.Expr parsePrimaryExpression() throws ParseException {
-//        throw new UnsupportedOperationException(); //TODO
         if (match("NIL")) {
             return new Ast.Expr.Literal(null);
-        } else if (match("TRUE")) {
+        }
+        else if (match("TRUE")) {
             return new Ast.Expr.Literal(true);
-        } else if (match("FALSE")) {
+        }
+        else if (match("FALSE")) {
             return new Ast.Expr.Literal(false);
-        } else if (match(Token.Type.INTEGER)) {
-            // INTEGER LITERAL FOUND
+        }
+        else if (match(Token.Type.INTEGER)) { // INTEGER LITERAL FOUND
             return new Ast.Expr.Literal(new BigInteger(tokens.get(-1).getLiteral()));
-        } else if (match(Token.Type.DECIMAL)) {
-            // DECIMAL LITERAL FOUND
+        }
+        else if (match(Token.Type.DECIMAL)) { // DECIMAL LITERAL FOUND
             return new Ast.Expr.Literal(new BigDecimal(tokens.get(-1).getLiteral()));
-        } else if (match(Token.Type.CHARACTER)) {
-            // CHARACTER LITERAL FOUND
-            // 'a'
+        }
+        else if (match(Token.Type.CHARACTER)) { // CHARACTER LITERAL FOUND
             char selectedChar = tokens.get(-1).getLiteral().charAt(1);
             return new Ast.Expr.Literal(selectedChar);
-        } else if (match(Token.Type.STRING)) {
-            // STRING LITERAL FOUND
-            // "example string"
+        }
+        else if (match(Token.Type.STRING)) { // STRING LITERAL FOUND
             String str = tokens.get(-1).getLiteral();
             str = str.substring(1, str.length() - 1);
             return new Ast.Expr.Literal(str);
-        } else if (match(Token.Type.IDENTIFIER)) {
-            // IDENTIFIER FOUND
+        }
+        else if (match(Token.Type.IDENTIFIER)) { // IDENTIFIER FOUND
             String name = tokens.get(-1).getLiteral();
-            if (!match("(")) {
-                // No expression after
-                // TODO: Fill out Optional
+            if (!match("(")) { // no expression after identifier
                 return new Ast.Expr.Access(Optional.empty(), name);
-
-            } else {
-
-                // Found expression after
-                if (!match(")")) {
+            }
+            else { // expression after identifier
+                if (!match(")")) { // expression arguments found
                     Ast.Expr initalExpr = parseExpression();
-                    List<Ast.Expr> args = new ArrayList<Ast.Expr>();
+                    List<Ast.Expr> args = new ArrayList<>();
                     args.add(initalExpr);
 
                     while (match(",")) {
                         args.add(parseExpression());
                     }
 
-                    // Check for closing parentheses
-                    if (match(")")) {
-                        // TODO: Fill out Optional
+                    if (match(")")) { // Check closing parentheses
                         return new Ast.Expr.Function(Optional.empty(), name, args);
                     } else {
                         throw new ParseException("Invalid function closing parentheses not found", tokens.get(0).getIndex());
@@ -406,7 +395,7 @@ public final class Parser {
                     if (!tokens.get(-1).getLiteral().equals(")")) {
                         throw new ParseException("Invalid function closing parentheses not found", tokens.get(0).getIndex());
                     } else {
-                        return new Ast.Expr.Function(Optional.empty(), name, Arrays.asList());
+                        return new Ast.Expr.Function(Optional.empty(), name, Collections.emptyList());
                     }
                 }
 
