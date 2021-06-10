@@ -133,13 +133,46 @@ public final class Parser {
     /**
      * Parses the {@code logical-expression} rule.
      */
+    // logical_expression ::= comparison_expression (('AND' | 'OR') comparison_expression)*
     public Ast.Expr parseLogicalExpression() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        try {
+            Ast.Expr leftExpr = parseEqualityExpression(); // left
+            Ast.Expr.Binary output = null;
+
+            while (peek("AND") || peek("OR")) { // right
+                Ast.Expr rightExpr;
+                String operation;
+
+                // if its not and is has to be or b/c of while loop
+                if (match("AND")) {
+                    operation = tokens.get(-1).getLiteral();
+                } else {
+                    match("OR");
+                    operation = tokens.get(-1).getLiteral();
+                }
+                rightExpr = parseEqualityExpression();
+
+                // check for initial output
+                if (Objects.isNull(output)) {
+                    output = new Ast.Expr.Binary(operation, leftExpr, rightExpr);
+                } else {
+                    output = new Ast.Expr.Binary(operation, output, rightExpr);
+                }
+            }
+            if(output == null) {
+                return leftExpr;
+            }
+            return output;
+
+        } catch(ParseException p) {
+            throw new ParseException(p.getMessage(), p.getIndex());
+        }
     }
 
     /**
      * Parses the {@code equality-expression} rule.
      */
+    // comparison_expression ::= additive_expression (('<' | '<=' | '>' | '>=' | '==' | '!=') additive_expression)*
     public Ast.Expr parseEqualityExpression() throws ParseException {
         try {
             Ast.Expr leftExpr = parseAdditiveExpression();
@@ -178,6 +211,9 @@ public final class Parser {
                     output = new Ast.Expr.Binary(operation, output, rightExpr);
                 }
             }
+            if(output == null) {
+                return leftExpr;
+            }
             return output;
         } catch(ParseException p) {
             throw new ParseException(p.getMessage(), p.getIndex());
@@ -188,7 +224,38 @@ public final class Parser {
      * Parses the {@code additive-expression} rule.
      */
     public Ast.Expr parseAdditiveExpression() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        try {
+            Ast.Expr leftExpr = parseMultiplicativeExpression(); // left
+            Ast.Expr.Binary output = null;
+
+            while (peek("+") || peek("-")) { // right
+                Ast.Expr rightExpr;
+                String operation;
+
+                // if its not and is has to be or b/c of while loop
+                if(match("+")) {
+                    operation = tokens.get(-1).getLiteral();
+                } else {
+                    match("-");
+                    operation = tokens.get(-1).getLiteral();
+                }
+                rightExpr = parseMultiplicativeExpression();
+
+                // check for initial output
+                if (Objects.isNull(output)) {
+                    output = new Ast.Expr.Binary(operation, leftExpr, rightExpr);
+                } else {
+                    output = new Ast.Expr.Binary(operation, output, rightExpr);
+                }
+            }
+            if(output == null) {
+                return leftExpr;
+            }
+            return output;
+
+        } catch(ParseException p) {
+            throw new ParseException(p.getMessage(), p.getIndex());
+        }
     }
 
     /**
@@ -218,6 +285,9 @@ public final class Parser {
                 } else {
                     output = new Ast.Expr.Binary(operation, output, rightExpr);
                 }
+            }
+            if(output == null) {
+                return secondaryExpr;
             }
             return output;
         } catch(ParseException p) {
@@ -342,7 +412,7 @@ public final class Parser {
             }
         } else if (match("(")) {
             Ast.Expr expr = parseExpression();
-            if (!match(')')) {
+            if (!match(")")) {
                 throw new ParseException("Expected closing parenthesis", -1);
             }
             return new Ast.Stmt.Expr.Group(expr);
