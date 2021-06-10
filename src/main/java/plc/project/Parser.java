@@ -300,42 +300,44 @@ public final class Parser {
      */
     public Ast.Expr parseSecondaryExpression() throws ParseException {
         try {
-          Ast.Expr initalExpr = parsePrimaryExpression();
+          Ast.Expr initialExpr = parsePrimaryExpression();
+
           List<Ast.Expr> args = new ArrayList<Ast.Expr>();
-          String name = null;
+          String reciever = null;
 
           while (match(".")) {
               if (!match(Token.Type.IDENTIFIER)) {
                   throw new ParseException("Invalid Identifier", tokens.get(0).getIndex());
               }
-              name = tokens.get(-1).getLiteral();
-
               // Identifier found
-              if (!peek("(")) {
-                  // No expression after
-                  return new Ast.Expr.Access(Optional.empty(), name);
+              reciever = tokens.get(-1).getLiteral();
 
+              if (!match("(")) { // No expression after
+//                  return new Ast.Expr.Access(Optional.empty(), reciever);
+                  initialExpr = new Ast.Expr.Access(Optional.of(initialExpr), reciever);
               } else {
                   // Found '('
-                  // Found expression after
-                  Ast.Expr initArgsExpr = parseExpression();
-                  args.add(initArgsExpr);
+                  if(!match(")")) { // Found expression after
+                      Ast.Expr initArgsExpr = parseExpression();
+                      args.add(initArgsExpr);
 
-                  while (match(",")) {
-                      args.add(parseExpression());
-                  }
-
-                  // Check for closing parentheses
-                  if(!match(")")) {
-                      throw new ParseException("Invalid function closing parentheses not found", tokens.get(0).getIndex());
+                      while (match(",")) {
+                          args.add(parseExpression());
+                      }
+                      if(!match(")")) { // Check closing parentheses
+                          throw new ParseException("Invalid function closing parentheses not found", tokens.get(0).getIndex());
+                      }
                   }
               }
           }
 
-          if (args.size() > 0 && Objects.nonNull(name)) {
-              return new Ast.Expr.Function(Optional.empty(), name, args);
+          if (args.size() > 0 && Objects.nonNull(reciever)) {
+              return new Ast.Expr.Function(Optional.of(initialExpr), reciever, args);
           }
-          return initalExpr;
+//          else if(tokens.get(-1).getLiteral().equals(")")) {
+//              return new Ast.Expr.Function(Optional.of(initialExpr), reciever, args);
+//          }
+          return initialExpr;
 
         } catch (ParseException p) {
             throw new ParseException(p.getMessage(), p.getIndex());
@@ -384,7 +386,7 @@ public final class Parser {
             } else {
 
                 // Found expression after
-                if (!peek(")")) {
+                if (!match(")")) {
                     Ast.Expr initalExpr = parseExpression();
                     List<Ast.Expr> args = new ArrayList<Ast.Expr>();
                     args.add(initalExpr);
@@ -401,7 +403,7 @@ public final class Parser {
                         throw new ParseException("Invalid function closing parentheses not found", tokens.get(0).getIndex());
                     }
                 } else {
-                    if (!match(")")) {
+                    if (!tokens.get(-1).getLiteral().equals(")")) {
                         throw new ParseException("Invalid function closing parentheses not found", tokens.get(0).getIndex());
                     } else {
                         return new Ast.Expr.Function(Optional.empty(), name, Arrays.asList());
@@ -410,6 +412,7 @@ public final class Parser {
 
 
             }
+
         } else if (match("(")) {
             Ast.Expr expr = parseExpression();
             if (!match(")")) {
