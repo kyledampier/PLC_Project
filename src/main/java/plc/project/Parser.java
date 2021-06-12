@@ -3,6 +3,7 @@ package plc.project;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * The parser takes the sequence of tokens emitted by the lexer and turns that
@@ -369,6 +370,15 @@ public final class Parser {
         else if (match(Token.Type.STRING)) { // STRING LITERAL FOUND
             String str = tokens.get(-1).getLiteral();
             str = str.substring(1, str.length() - 1);
+            if(str.contains("\\")) {
+                str = str.replace("\\n", "\n")
+                        .replace("\\t", "\t")
+                        .replace("\\b", "\b")
+                        .replace("\\r", "\r")
+                        .replace("\\'", "'")
+                        .replace("\"", "\\");
+                System.out.println(str);
+            }
             return new Ast.Expr.Literal(str);
         }
         else if (match(Token.Type.IDENTIFIER)) { // IDENTIFIER FOUND
