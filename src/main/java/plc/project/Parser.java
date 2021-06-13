@@ -311,12 +311,13 @@ public final class Parser {
                   throw new ParseException("Invalid Identifier", tokens.get(0).getIndex());
               }
               // Identifier found
-              reciever = tokens.get(-1).getLiteral();
 
               if (!match("(")) { // No expression after
-                  initialExpr = new Ast.Expr.Access(Optional.of(initialExpr), reciever);
+                  initialExpr = new Ast.Expr.Access(Optional.of(initialExpr), tokens.get(-1).getLiteral());
               } else {
                   // Found '('
+                  reciever = tokens.get(-2).getLiteral();
+
                   if(!match(")")) { // Found expression after
                       Ast.Expr initArgsExpr = parseExpression();
                       args.add(initArgsExpr);
