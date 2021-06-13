@@ -416,7 +416,7 @@ public final class Parser {
         } else if (match("(")) {
             Ast.Expr expr = parseExpression();
             if (!match(")")) {
-                throw new ParseException("Expected closing parenthesis", -1);
+                throw new ParseException("Expected closing parenthesis", tokens.get(0).getIndex());
             }
             return new Ast.Stmt.Expr.Group(expr);
         } else {
