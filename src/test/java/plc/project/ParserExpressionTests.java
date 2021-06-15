@@ -143,12 +143,12 @@ final class ParserExpressionTests {
                                 new Ast.Expr.Access(Optional.empty(), "expr2")
                         ))
                 ),
-                Arguments.of("Missing closing paren",
-                        Arrays.asList(
-                                new Token(Token.Type.OPERATOR, "(", 0),
-                                new Token(Token.Type.IDENTIFIER, "abc", 1)
-                        ),
-                        )
+                Arguments.of("Missing closing parenthesis",
+                    Arrays.asList(
+                            new Token(Token.Type.OPERATOR, "(", 0),
+                            new Token(Token.Type.IDENTIFIER, "abc", 1)
+                    ), null
+                )
         );
     }
 
