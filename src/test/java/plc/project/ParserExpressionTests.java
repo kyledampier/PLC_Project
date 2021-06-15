@@ -97,6 +97,10 @@ final class ParserExpressionTests {
                 Arguments.of("Escape Character",
                         Arrays.asList(new Token(Token.Type.STRING, "\"Hello,\\nWorld!\"", 0)),
                         new Ast.Expr.Literal("Hello,\nWorld!")
+                ),
+                Arguments.of("Escape Character Char",
+                        Arrays.asList(new Token(Token.Type.CHARACTER, "'\\n'", 0)),
+                        new Ast.Expr.Literal("'\n'")
                 )
         );
     }
@@ -131,7 +135,13 @@ final class ParserExpressionTests {
                                 new Ast.Expr.Access(Optional.empty(), "expr1"),
                                 new Ast.Expr.Access(Optional.empty(), "expr2")
                         ))
-                )
+                ),
+                Arguments.of("Missing closing paren",
+                        Arrays.asList(
+                                new Token(Token.Type.OPERATOR, "(", 0),
+                                new Token(Token.Type.IDENTIFIER, "abc", 1)
+                        ),
+                        )
         );
     }
 

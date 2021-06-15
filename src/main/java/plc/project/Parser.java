@@ -366,6 +366,26 @@ public final class Parser {
         }
         else if (match(Token.Type.CHARACTER)) { // CHARACTER LITERAL FOUND
             char selectedChar = tokens.get(-1).getLiteral().charAt(1);
+            if (selectedChar == '\\') {
+                char escapedChar = tokens.get(-1).getLiteral().charAt(2);
+                if (escapedChar == '\'') {
+                    return new Ast.Expr.Literal("'\''");
+                } else if (escapedChar == 'n') {
+                    return new Ast.Expr.Literal("'\n'");
+                } else if (escapedChar == 't') {
+                    return new Ast.Expr.Literal("'\t'");
+                } else if (escapedChar == 'b') {
+                    return new Ast.Expr.Literal("'\b'");
+                } else if (escapedChar == 'r') {
+                    return new Ast.Expr.Literal("'\r'");
+                } else if (escapedChar == '\"') {
+                    return new Ast.Expr.Literal("'\"'");
+                } else if (escapedChar == '\\') {
+                    return new Ast.Expr.Literal("'\\'");
+                } else {
+                    return new Ast.Expr.Literal(escapedChar);
+                }
+            }
             return new Ast.Expr.Literal(selectedChar);
         }
         else if (match(Token.Type.STRING)) { // STRING LITERAL FOUND
@@ -416,7 +436,7 @@ public final class Parser {
         } else if (match("(")) {
             Ast.Expr expr = parseExpression();
             if (!match(")")) {
-                throw new ParseException("Expected closing parenthesis", tokens.get(0).getIndex());
+                throw new ParseException("Expected closing parenthesis", tokens.get(-1).getIndex());
             }
             return new Ast.Stmt.Expr.Group(expr);
         } else {
