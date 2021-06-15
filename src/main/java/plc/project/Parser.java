@@ -58,7 +58,7 @@ public final class Parser {
             Ast.Stmt.Expr lhs = parseExpression();
             if (!match("=")) {
                 if (!match(";")) {
-                    throw new ParseException("Expected semicolon", tokens.get(0).getIndex());
+                    throw new ParseException("Expected semicolon", tokens.get(-1).getIndex());
                 }
                 return new Ast.Stmt.Expression(lhs);
             }
@@ -66,7 +66,7 @@ public final class Parser {
             Ast.Stmt.Expr rhs = parseExpression();
 
             if (!match(";")) {
-                throw new ParseException("Expected semicolon", tokens.get(0).getIndex());
+                throw new ParseException("Expected semicolon", tokens.get(-1).getIndex());
             }
             return new Ast.Stmt.Assignment(lhs, rhs);
 
@@ -272,12 +272,10 @@ public final class Parser {
                 String operation;
 
                 // find which operation
-                if(match("/")) {
-                    operation = tokens.get(-1).getLiteral();
-                }  else {
+                if (!match("/")) {
                     match("*");
-                    operation = tokens.get(-1).getLiteral();
                 }
+                operation = tokens.get(-1).getLiteral();
                 rightExpr = parseSecondaryExpression();
 
                 // check for initial output
@@ -303,7 +301,7 @@ public final class Parser {
         try {
           Ast.Expr initialExpr = parsePrimaryExpression();
 
-          List<Ast.Expr> args = new ArrayList<Ast.Expr>();
+          List<Ast.Expr> args = new ArrayList<>();
           String reciever = null;
 
           while (match(".")) {

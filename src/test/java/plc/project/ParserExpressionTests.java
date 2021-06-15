@@ -38,6 +38,13 @@ final class ParserExpressionTests {
                                 new Token(Token.Type.OPERATOR, ";", 6)
                         ),
                         new Ast.Stmt.Expression(new Ast.Expr.Function(Optional.empty(), "name", Collections.emptyList()))
+                ),
+                Arguments.of("Function Expression",
+                        Collections.singletonList(
+                                //name();
+                                new Token(Token.Type.IDENTIFIER, "f", 0)
+                        ),
+                        null
                 )
         );
     }
@@ -212,10 +219,10 @@ final class ParserExpressionTests {
 
     private static Stream<Arguments> testAccessExpression() {
         return Stream.of(
-//                Arguments.of("Variable",
-//                        Arrays.asList(new Token(Token.Type.IDENTIFIER, "name", 0)),
-//                        new Ast.Expr.Access(Optional.empty(), "name")
-//                ),
+                Arguments.of("Variable",
+                        Collections.singletonList(new Token(Token.Type.IDENTIFIER, "name", 0)),
+                        new Ast.Expr.Access(Optional.empty(), "name")
+                ),
                 Arguments.of("Field Access",
                         Arrays.asList(
                                 //obj.field
