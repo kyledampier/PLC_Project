@@ -39,8 +39,8 @@ public final class Parser {
      */
     public Ast.Source parseSource() throws ParseException {
         try {
-            List<Ast.Field> fields = Arrays.asList();
-            List<Ast.Method> methods = Arrays.asList();
+            List<Ast.Field> fields = new ArrayList();
+            List<Ast.Method> methods = new ArrayList();
             while (tokens.has(0)) {
                 if (match("LET")) {
                     fields.add(parseField());
@@ -75,7 +75,7 @@ public final class Parser {
             if (match(Token.Type.IDENTIFIER)) {
                 String functionName = tokens.get(-1).getLiteral();
                 if (match("(")) {
-                    List<String> params = Arrays.asList();
+                    List<String> params = new ArrayList<>();
 
                     // get all params
                     while (match(Token.Type.IDENTIFIER)) {
@@ -100,7 +100,7 @@ public final class Parser {
                     }
 
                     // get all statements
-                    List<Ast.Stmt> statements = Arrays.asList();
+                    List<Ast.Stmt> statements = new ArrayList<>();
                     while (!match("END")) {
                         statements.add(parseStatement());
                     }
@@ -193,8 +193,8 @@ public final class Parser {
         Ast.Expr condition = parseExpression();
         if (match("DO")) {
             boolean isElse = false;
-            List<Ast.Stmt> thenStatements = Arrays.asList();
-            List<Ast.Stmt> elseStatements = Arrays.asList();
+            List<Ast.Stmt> thenStatements = new ArrayList<>();
+            List<Ast.Stmt> elseStatements = new ArrayList<>();
 
             while (!peek("END")) {
                 if (peek("ELSE")) {
@@ -223,7 +223,26 @@ public final class Parser {
      * {@code FOR}.
      */
     public Ast.Stmt.For parseForStatement() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        if (match(Token.Type.IDENTIFIER)) {
+            String name = tokens.get(-1).getLiteral();
+            if (!match("IN")) {
+                throw errorHandle("Expected IN");
+            }
+
+            Ast.Expr expression = parseExpression();
+            if (!match("DO")) {
+                throw errorHandle("Expected DO");
+            }
+
+            List<Ast.Stmt> statements = new ArrayList<>();
+
+            while (!match("END")) {
+                statements.add(parseStatement());
+            }
+
+            return new Ast.Stmt.For(name, expression, statements);
+        }
+        throw errorHandle("Expected Token");
     }
 
     /**
@@ -232,7 +251,18 @@ public final class Parser {
      * {@code WHILE}.
      */
     public Ast.Stmt.While parseWhileStatement() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        Ast.Expr expression = parseExpression();
+        if (!match("DO")) {
+            throw errorHandle("Expected DO");
+        }
+
+        List<Ast.Stmt> statements = new ArrayList<>();
+
+        while (!match("END")) {
+            statements.add(parseStatement());
+        }
+
+        return new Ast.Stmt.While(expression, statements);
     }
 
     /**
@@ -241,7 +271,11 @@ public final class Parser {
      * {@code RETURN}.
      */
     public Ast.Stmt.Return parseReturnStatement() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        Ast.Expr expression = parseExpression();
+        if (!match(";")) {
+            throw errorHandle("Expected semicolon.");
+        }
+        return new Ast.Stmt.Return(expression);
     }
 
     /**
@@ -530,11 +564,11 @@ public final class Parser {
                     if (match(")")) { // Check closing parentheses
                         return new Ast.Expr.Function(Optional.empty(), name, args);
                     } else {
-                        throw new ParseException("Invalid function closing parentheses not found", tokens.get(0).getIndex());
+                        throw new ParseException("Closing parentheses expected", tokens.get(0).getIndex());
                     }
                 } else {
                     if (!tokens.get(-1).getLiteral().equals(")")) {
-                        throw new ParseException("Invalid function closing parentheses not found", tokens.get(0).getIndex());
+                        throw new ParseException("Closing parentheses expected", tokens.get(0).getIndex());
                     } else {
                         return new Ast.Expr.Function(Optional.empty(), name, Collections.emptyList());
                     }
