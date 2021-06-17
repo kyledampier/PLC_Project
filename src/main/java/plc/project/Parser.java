@@ -37,10 +37,11 @@ public final class Parser {
     /**
      * Parses the {@code source} rule.
      */
+    // source ::= field* method*
     public Ast.Source parseSource() throws ParseException {
         try {
-            List<Ast.Field> fields = new ArrayList();
-            List<Ast.Method> methods = new ArrayList();
+            List<Ast.Field> fields = new ArrayList<>();
+            List<Ast.Method> methods = new ArrayList<>();
             while (tokens.has(0)) {
                 if (match("LET")) {
                     fields.add(parseField());
@@ -57,6 +58,7 @@ public final class Parser {
     /**
      * Parses the {@code f     * next tokens start a field, aka {@code LET}.ield} rule. This method should only be called if the
      */
+    // field ::= 'LET' identifier ('=' expression)? ';'
     public Ast.Field parseField() throws ParseException {
         try {
             Ast.Stmt.Declaration declaration = parseDeclarationStatement();
@@ -70,6 +72,7 @@ public final class Parser {
      * Parses the {@code method} rule. This method should only be called if the
      * next tokens start a method, aka {@code DEF}.
      */
+    // method ::= 'DEF' identifier '(' (identifier (',' identifier)*)? ')' 'DO' statement* 'END'
     public Ast.Method parseMethod() throws ParseException {
         try {
             if (match(Token.Type.IDENTIFIER)) {
@@ -164,24 +167,21 @@ public final class Parser {
      */
     public Ast.Stmt.Declaration parseDeclarationStatement() throws ParseException {
         if (match(Token.Type.IDENTIFIER)) {
-            // we gucci
-            Token lhs = tokens.get(-1);
+            String identifier = tokens.get(-1).getLiteral();
             if (match("=")) {
                 Ast.Expr rhs = parseExpression();
                 if (match(";")) {
-                    return new Ast.Stmt.Declaration(lhs.getLiteral(), Optional.of(rhs));
+                    return new Ast.Stmt.Declaration(identifier, Optional.of(rhs));
                 }
-                throw errorHandle("Expected semicolon");
             } else {
                 if (match(";")) {
-                    return new Ast.Stmt.Declaration(lhs.getLiteral(), Optional.empty());
+                    return new Ast.Stmt.Declaration(identifier, Optional.empty());
                 }
-                throw errorHandle("Expected semicolon");
             }
         } else {
-            // not so gucci
-            throw errorHandle("Expected semicolon");
+            throw errorHandle("Invalid Identifier");
         }
+        throw errorHandle("Expected semicolon");
     }
 
     /**
@@ -189,30 +189,30 @@ public final class Parser {
      * should only be called if the next tokens start an if statement, aka
      * {@code IF}.
      */
+    // 'IF' expression 'DO' statement* ('ELSE' statement*)? 'END'
     public Ast.Stmt.If parseIfStatement() throws ParseException {
-        Ast.Expr condition = parseExpression();
+        Ast.Expr expression = parseExpression();
         if (match("DO")) {
             boolean isElse = false;
-            List<Ast.Stmt> thenStatements = new ArrayList<>();
+            List<Ast.Stmt> doStatements = new ArrayList<>();
             List<Ast.Stmt> elseStatements = new ArrayList<>();
 
-            while (!peek("END")) {
-                if (peek("ELSE")) {
+            while (!match("END")) {
+                if (match("ELSE")) {
                     if (!isElse) {
                         isElse = true;
                     } else {
                         throw errorHandle("Too many ELSE Statements");
                     }
                 }
-
                 if (isElse) {
                     elseStatements.add(parseStatement());
                 } else {
-                    thenStatements.add(parseStatement());
+                    doStatements.add(parseStatement());
                 }
             }
 
-            return new Ast.Stmt.If(condition, thenStatements, elseStatements);
+            return new Ast.Stmt.If(expression, doStatements, elseStatements);
         }
         throw errorHandle("Expected DO");
     }
@@ -403,9 +403,6 @@ public final class Parser {
                   initialExpr = new Ast.Expr.Function(Optional.of(initialExpr), receiver, args);
               }
           }
-//          if (Objects.nonNull(reciever)) {
-//              return new Ast.Expr.Function(Optional.of(initialExpr), reciever, args);
-//          }
           return initialExpr;
 
         } catch (ParseException p) {
