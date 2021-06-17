@@ -295,31 +295,15 @@ public final class Parser {
     // logical_expression ::= comparison_expression (('AND' | 'OR') comparison_expression)*
     public Ast.Expr parseLogicalExpression() throws ParseException {
         try {
-            Ast.Expr leftExpr = parseEqualityExpression(); // left
-            Ast.Expr.Binary output = null;
 
-            while (peek("AND") || peek("OR")) { // right
-                Ast.Expr rightExpr;
-                String operation;
+            Ast.Expr output = parseEqualityExpression();
 
-                // if its not and is has to be or b/c of while loop
-                if (match("AND")) {
-                    operation = tokens.get(-1).getLiteral();
-                } else {
-                    match("OR");
-                    operation = tokens.get(-1).getLiteral();
-                }
-                rightExpr = parseEqualityExpression();
+            while (match("AND") || match("OR")) { // right
 
-                // check for initial output
-                if (Objects.isNull(output)) {
-                    output = new Ast.Expr.Binary(operation, leftExpr, rightExpr);
-                } else {
-                    output = new Ast.Expr.Binary(operation, output, rightExpr);
-                }
-            }
-            if(output == null) {
-                return leftExpr;
+                String operation = tokens.get(-1).getLiteral();
+                Ast.Expr rightExpr = parseEqualityExpression();
+                output = new Ast.Expr.Binary(operation, output, rightExpr);
+
             }
             return output;
 
@@ -334,44 +318,16 @@ public final class Parser {
     // comparison_expression ::= additive_expression (('<' | '<=' | '>' | '>=' | '==' | '!=') additive_expression)*
     public Ast.Expr parseEqualityExpression() throws ParseException {
         try {
-            Ast.Expr leftExpr = parseAdditiveExpression();
-            Ast.Expr.Binary output = null;
-
-            while (peek("!=")
-                    || peek("==")
-                    || peek(">=")
-                    || peek(">")
-                    || peek("<=")
-                    || peek("<")) { // right
-                Ast.Expr rightExpr;
-                String operation;
-
-                // find which operation
-                if(match("!=")) {
-                    operation = tokens.get(-1).getLiteral();
-                } else if(match("==")) {
-                    operation = tokens.get(-1).getLiteral();
-                } else if(match(">=")) {
-                    operation = tokens.get(-1).getLiteral();
-                } else if(match(">")) {
-                    operation = tokens.get(-1).getLiteral();
-                } else if(match("<=")) {
-                    operation = tokens.get(-1).getLiteral();
-                } else {
-                    match("<");
-                    operation = tokens.get(-1).getLiteral();
-                }
-                rightExpr = parseEqualityExpression();
-
-                // check for initial output
-                if (Objects.isNull(output)) {
-                    output = new Ast.Expr.Binary(operation, leftExpr, rightExpr);
-                } else {
-                    output = new Ast.Expr.Binary(operation, output, rightExpr);
-                }
-            }
-            if(output == null) {
-                return leftExpr;
+            Ast.Expr output = parseAdditiveExpression();
+            while (match("!=")
+                    || match("==")
+                    || match(">=")
+                    || match(">")
+                    || match("<=")
+                    || match("<")) {
+                String operation = tokens.get(-1).getLiteral();
+                Ast.Expr rightExpr = parseEqualityExpression();
+                output = new Ast.Expr.Binary(operation, output, rightExpr);
             }
             return output;
         } catch(ParseException p) {
@@ -384,31 +340,12 @@ public final class Parser {
      */
     public Ast.Expr parseAdditiveExpression() throws ParseException {
         try {
-            Ast.Expr leftExpr = parseMultiplicativeExpression(); // left
-            Ast.Expr.Binary output = null;
+            Ast.Expr output = parseMultiplicativeExpression();
 
-            while (peek("+") || peek("-")) { // right
-                Ast.Expr rightExpr;
-                String operation;
-
-                // if its not and is has to be or b/c of while loop
-                if(match("+")) {
-                    operation = tokens.get(-1).getLiteral();
-                } else {
-                    match("-");
-                    operation = tokens.get(-1).getLiteral();
-                }
-                rightExpr = parseMultiplicativeExpression();
-
-                // check for initial output
-                if (Objects.isNull(output)) {
-                    output = new Ast.Expr.Binary(operation, leftExpr, rightExpr);
-                } else {
-                    output = new Ast.Expr.Binary(operation, output, rightExpr);
-                }
-            }
-            if(output == null) {
-                return leftExpr;
+            while (match("+") || match("-")) {
+                String operation = tokens.get(-1).getLiteral();
+                Ast.Expr rightExpr = parseMultiplicativeExpression();
+                output = new Ast.Expr.Binary(operation, output, rightExpr);
             }
             return output;
 
@@ -422,29 +359,12 @@ public final class Parser {
      */
     public Ast.Expr parseMultiplicativeExpression() throws ParseException {
         try {
-            Ast.Expr secondaryExpr = parseSecondaryExpression();
-            Ast.Expr.Binary output = null;
+            Ast.Expr output = parseSecondaryExpression();
 
-            while (peek("/") || peek("*")) { // right
-                Ast.Expr rightExpr;
-                String operation;
-
-                // find which operation
-                if (!match("/")) {
-                    match("*");
-                }
-                operation = tokens.get(-1).getLiteral();
-                rightExpr = parseSecondaryExpression();
-
-                // check for initial output
-                if (Objects.isNull(output)) {
-                    output = new Ast.Expr.Binary(operation, secondaryExpr, rightExpr);
-                } else {
-                    output = new Ast.Expr.Binary(operation, output, rightExpr);
-                }
-            }
-            if(output == null) {
-                return secondaryExpr;
+            while (match("/") || match("*")) { // right
+                String operation = tokens.get(-1).getLiteral();
+                Ast.Expr rightExpr = parseSecondaryExpression();
+                output = new Ast.Expr.Binary(operation, output, rightExpr);
             }
             return output;
         } catch(ParseException p) {
@@ -455,29 +375,24 @@ public final class Parser {
     /**
      * Parses the {@code secondary-expression} rule.
      */
+    // secondary_expression ::= primary_expression ('.' identifier ('(' (expression (',' expression)*)? ')')?)*
     public Ast.Expr parseSecondaryExpression() throws ParseException {
         try {
           Ast.Expr initialExpr = parsePrimaryExpression();
-
-          List<Ast.Expr> args = new ArrayList<>();
-          String reciever = null;
 
           while (match(".")) {
               if (!match(Token.Type.IDENTIFIER)) {
                   throw new ParseException("Invalid Identifier", tokens.get(0).getIndex());
               }
               // Identifier found
-
+              String receiver = tokens.get(-1).getLiteral();
               if (!match("(")) { // No expression after
-                  initialExpr = new Ast.Expr.Access(Optional.of(initialExpr), tokens.get(-1).getLiteral());
+                  initialExpr = new Ast.Expr.Access(Optional.of(initialExpr), receiver);
               } else {
                   // Found '('
-                  reciever = tokens.get(-2).getLiteral();
-
+                  List<Ast.Expr> args = new ArrayList<>();
                   if(!match(")")) { // Found expression after
-                      Ast.Expr initArgsExpr = parseExpression();
-                      args.add(initArgsExpr);
-
+                      args.add(parseExpression());
                       while (match(",")) {
                           args.add(parseExpression());
                       }
@@ -485,12 +400,12 @@ public final class Parser {
                           throw new ParseException("Invalid function closing parentheses not found", tokens.get(0).getIndex());
                       }
                   }
+                  initialExpr = new Ast.Expr.Function(Optional.of(initialExpr), receiver, args);
               }
           }
-
-          if (Objects.nonNull(reciever)) {
-              return new Ast.Expr.Function(Optional.of(initialExpr), reciever, args);
-          }
+//          if (Objects.nonNull(reciever)) {
+//              return new Ast.Expr.Function(Optional.of(initialExpr), reciever, args);
+//          }
           return initialExpr;
 
         } catch (ParseException p) {
@@ -526,11 +441,12 @@ public final class Parser {
                     .replace("\\t", "\t")
                     .replace("\\b", "\b")
                     .replace("\\r", "\r")
-                    .replace("\\\'", "\'")
+                    .replace("\\'", "'")
                     .replace("\\\\", "\\")
                     .replace("\\\"", "\"");
-            char selectedChar = str.charAt(1);
-            return new Ast.Expr.Literal(selectedChar);
+            if(str.contains("\n") || str.contains("\t") || str.contains("\b") || str.contains("\r") || str.contains("\\") || str.contains("\"") || str.charAt(1) == '\'')
+                return new Ast.Expr.Literal(str);
+            return new Ast.Expr.Literal(str.charAt(1));
         }
         else if (match(Token.Type.STRING)) { // STRING LITERAL FOUND
             String str = tokens.get(-1).getLiteral();
@@ -540,7 +456,7 @@ public final class Parser {
                         .replace("\\t", "\t")
                         .replace("\\b", "\b")
                         .replace("\\r", "\r")
-                        .replace("\\\'", "\'")
+                        .replace("\\'", "'")
                         .replace("\\\\", "\\")
                         .replace("\\\"", "\"");
             }

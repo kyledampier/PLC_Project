@@ -70,6 +70,7 @@ final class ParserExpressionTests {
                                 new Ast.Expr.Access(Optional.empty(), "value")
                         )
                 )
+
         );
     }
 
@@ -184,9 +185,9 @@ final class ParserExpressionTests {
                                 new Ast.Expr.Access(Optional.empty(), "expr2")
                         )
                 ),
-                Arguments.of("Binary Addition",
+                Arguments.of("Chain Arithmetic",
                         Arrays.asList(
-                                //expr1 + expr2
+                                //expr1 + expr2 - expr3
                                 new Token(Token.Type.IDENTIFIER, "expr1", 0),
                                 new Token(Token.Type.OPERATOR, "+", 6),
                                 new Token(Token.Type.IDENTIFIER, "expr2", 8)
@@ -194,6 +195,37 @@ final class ParserExpressionTests {
                         new Ast.Expr.Binary("+",
                                 new Ast.Expr.Access(Optional.empty(), "expr1"),
                                 new Ast.Expr.Access(Optional.empty(), "expr2")
+                        )
+                ),
+                Arguments.of("Chain Arithmetic",
+                        Arrays.asList(
+                                //1 + 2 * 3
+                                new Token(Token.Type.INTEGER, "1", 0),
+                                new Token(Token.Type.OPERATOR, "+", 1),
+                                new Token(Token.Type.INTEGER, "2", 2),
+                                new Token(Token.Type.OPERATOR, "*", 3),
+                                new Token(Token.Type.INTEGER, "3", 4)
+                        ),
+                        new Ast.Expr.Binary("+",
+                                new Ast.Expr.Literal(1),
+                                new Ast.Expr.Binary("*",
+                                        new Ast.Expr.Literal(2),
+                                        new Ast.Expr.Literal(3))
+                        )
+                ),
+                Arguments.of("Binary Addition",
+                        Arrays.asList(
+                                //expr1 + expr2
+                                new Token(Token.Type.IDENTIFIER, "variable", 0),
+                                new Token(Token.Type.OPERATOR, "-", 7),
+                                new Token(Token.Type.INTEGER, "8", 8),
+                                new Token(Token.Type.OPERATOR, "+", 9),
+                                new Token(Token.Type.INTEGER, "5", 10)
+                        ),
+                        new Ast.Expr.Binary(
+                                "+",
+                                new Ast.Expr.Binary("-", new Ast.Expr.Access(Optional.empty(), "variable"), new Ast.Expr.Literal(8)),
+                                new Ast.Expr.Literal(5)
                         )
                 ),
                 Arguments.of("Binary Multiplication",
@@ -231,6 +263,36 @@ final class ParserExpressionTests {
                                 new Token(Token.Type.IDENTIFIER, "field", 4)
                         ),
                         new Ast.Expr.Access(Optional.of(new Ast.Expr.Access(Optional.empty(), "obj")), "field")
+                ),
+                Arguments.of("Chain Access Call",
+                        Arrays.asList(
+                                // a.b.c
+                                new Token(Token.Type.IDENTIFIER, "a", 0),
+                                new Token(Token.Type.OPERATOR, ".", 1),
+                                new Token(Token.Type.IDENTIFIER, "b", 2),
+                                new Token(Token.Type.OPERATOR, ".", 3),
+                                new Token(Token.Type.IDENTIFIER, "c", 4)
+                        ),
+                        new Ast.Expr.Access(Optional.of(new Ast.Expr.Access(Optional.of(new Ast.Expr.Access(Optional.empty(), "a")), "b")), "c")
+                ),
+                Arguments.of("Function Access",
+                        Arrays.asList(
+                                new Token(Token.Type.IDENTIFIER, "method", 0),
+                                new Token(Token.Type.OPERATOR, "(", 5),
+                                new Token(Token.Type.IDENTIFIER, "a", 6),
+                                new Token(Token.Type.OPERATOR, ",",7),
+                                new Token(Token.Type.INTEGER, "5", 8),
+                                new Token(Token.Type.OPERATOR, ")", 9),
+                                new Token(Token.Type.OPERATOR, ".", 10),
+                                new Token(Token.Type.IDENTIFIER, "field", 11)
+                        ),
+                        new Ast.Expr.Access(Optional.of(
+                                new Ast.Expr.Function(Optional.empty(),
+                                        "method",
+                                        Arrays.asList(
+                                                new Ast.Expr.Access(Optional.empty(), "a"),
+                                                new Ast.Expr.Literal(5)))),
+                                "field")
                 )
         );
     }
