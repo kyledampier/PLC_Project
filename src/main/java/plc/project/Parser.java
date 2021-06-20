@@ -434,15 +434,15 @@ public final class Parser {
         }
         else if (match(Token.Type.CHARACTER)) { // CHARACTER LITERAL FOUND
             String str = tokens.get(-1).getLiteral();
-            str = str.replace("\\n", "\n")
-                    .replace("\\t", "\t")
-                    .replace("\\b", "\b")
-                    .replace("\\r", "\r")
-                    .replace("\\'", "'")
-                    .replace("\\\\", "\\")
-                    .replace("\\\"", "\"");
-            if(str.contains("\n") || str.contains("\t") || str.contains("\b") || str.contains("\r") || str.contains("\\") || str.contains("\"") || str.charAt(1) == '\'')
-                return new Ast.Expr.Literal(str);
+//            str = str.replace("\\n", "\n")
+//                    .replace("\\t", "\t")
+//                    .replace("\\b", "\b")
+//                    .replace("\\r", "\r")
+//                    .replace("\\'", "'")
+//                    .replace("\\\\", "\\")
+//                    .replace("\\\"", "\"");
+//            if(str.contains("\n") || str.contains("\t") || str.contains("\b") || str.contains("\r") || str.contains("\\") || str.contains("\"") || str.charAt(1) == '\'')
+//                return new Ast.Expr.Literal(str)
             return new Ast.Expr.Literal(str.charAt(1));
         }
         else if (match(Token.Type.STRING)) { // STRING LITERAL FOUND
