@@ -497,7 +497,7 @@ public final class Parser {
             }
             return new Ast.Stmt.Expr.Group(expr);
         } else {
-            throw new ParseException("Invalid Primary Expression", tokens.get(0).getIndex());
+            throw new ParseException("Invalid Primary Expression", tokens.get(-1).getIndex());
             // TODO: handle storing the actual character index instead of I
         }
     }
