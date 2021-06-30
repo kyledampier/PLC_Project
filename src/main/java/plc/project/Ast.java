@@ -39,7 +39,7 @@ public abstract class Ast {
         public String toString() {
             return "Ast.Source{" +
                     "fields=" + fields +
-                    "functions=" + methods +
+                    "methods=" + methods +
                     '}';
         }
 
@@ -114,7 +114,7 @@ public abstract class Ast {
 
         @Override
         public String toString() {
-            return "Ast.Function{" +
+            return "Ast.Method{" +
                     "name='" + name + '\'' +
                     ", parameters=" + parameters +
                     ", statements=" + statements +
@@ -549,6 +549,76 @@ public abstract class Ast {
             }
 
         }
+
+    }
+
+    public interface Visitor<T> {
+
+        default T visit(Ast ast) {
+            if (ast instanceof Source) {
+                return visit((Source) ast);
+            } else if (ast instanceof Field) {
+                return visit((Field) ast);
+            } else if (ast instanceof Method) {
+                return visit((Method) ast);
+            } else if (ast instanceof Stmt.Expression) {
+                return visit((Stmt.Expression) ast);
+            } else if (ast instanceof Stmt.Declaration) {
+                return visit((Stmt.Declaration) ast);
+            } else if (ast instanceof Stmt.Assignment) {
+                return visit((Stmt.Assignment) ast);
+            } else if (ast instanceof Stmt.If) {
+                return visit((Stmt.If) ast);
+            } else if (ast instanceof Stmt.For) {
+                return visit((Stmt.For) ast);
+            } else if (ast instanceof Stmt.While) {
+                return visit((Stmt.While) ast);
+            } else if (ast instanceof Stmt.Return) {
+                return visit((Stmt.Return) ast);
+            } else if (ast instanceof Expr.Literal) {
+                return visit((Expr.Literal) ast);
+            } else if (ast instanceof Expr.Group) {
+                return visit((Expr.Group) ast);
+            } else if (ast instanceof Expr.Binary) {
+                return visit((Expr.Binary) ast);
+            } else if (ast instanceof Expr.Access) {
+                return visit((Expr.Access) ast);
+            } else if (ast instanceof Expr.Function) {
+                return visit((Expr.Function) ast);
+            } else {
+                throw new AssertionError("Unimplemented AST type: " + ast.getClass().getName() + ".");
+            }
+        }
+
+        T visit(Source ast);
+
+        T visit(Field ast);
+
+        T visit(Method ast);
+
+        T visit(Stmt.Expression ast);
+
+        T visit(Stmt.Declaration ast);
+
+        T visit(Stmt.Assignment ast);
+
+        T visit(Stmt.If ast);
+
+        T visit(Stmt.For ast);
+
+        T visit(Stmt.While ast);
+
+        T visit(Stmt.Return ast);
+
+        T visit(Expr.Literal ast);
+
+        T visit(Expr.Group ast);
+
+        T visit(Expr.Binary ast);
+
+        T visit(Expr.Access ast);
+
+        T visit(Expr.Function ast);
 
     }
 
