@@ -3,6 +3,10 @@ package plc.project;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Class {@code Environment} manages the creation and state of the source code being interpreted
+ *
+ */
 public class Environment {
 
     public static final PlcObject NIL = create(new Object() {

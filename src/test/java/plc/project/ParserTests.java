@@ -242,6 +242,17 @@ final class ParserTests {
                                 new Ast.Expr.Access(Optional.empty(), "expr"),
                                 Arrays.asList(new Ast.Stmt.Expression(new Ast.Expr.Access(Optional.empty(), "stmt")))
                         )
+                ),
+                Arguments.of("While no END",
+                        Arrays.asList(
+                                //WHILE expr DO stmt; END
+                                new Token(Token.Type.IDENTIFIER, "WHILE", 0),
+                                new Token(Token.Type.IDENTIFIER, "expr", 6),
+                                new Token(Token.Type.IDENTIFIER, "DO", 11),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 14),
+                                new Token(Token.Type.OPERATOR, ";", 18)
+                        ),
+                        null
                 )
         );
     }

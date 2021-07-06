@@ -5,6 +5,7 @@ import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
@@ -75,17 +76,152 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Expr.Literal ast) {
-        throw new UnsupportedOperationException(); //TODO
+        if(ast.getLiteral() == null) {
+            return Environment.NIL;
+        }
+        return Environment.create(ast.getLiteral());
+//        throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
     public Environment.PlcObject visit(Ast.Expr.Group ast) {
-        throw new UnsupportedOperationException(); //TODO
+        return visit(ast.getExpression());
+//        throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
     public Environment.PlcObject visit(Ast.Expr.Binary ast) {
-        throw new UnsupportedOperationException(); //TODO
+        Environment.PlcObject left = visit(ast.getLeft());
+//        Environment.PlcObject visit(ast.getRight()) = visit(ast.getRight());
+        switch (ast.getOperator()) {
+            case "+":
+                if(left.getValue() instanceof BigInteger && visit(ast.getRight()).getValue() instanceof BigInteger) {
+                    return Environment.create(
+                            requireType(BigInteger.class, left).add(requireType(BigInteger.class, visit(ast.getRight())))
+                    );
+                }
+                if(left.getValue() instanceof BigDecimal && visit(ast.getRight()).getValue() instanceof BigDecimal) {
+                    return Environment.create(
+                            requireType(BigDecimal.class, left).add(requireType(BigDecimal.class, visit(ast.getRight())))
+                    );
+                }
+                if(left.getValue() instanceof String && visit(ast.getRight()).getValue() instanceof String) {
+                    return Environment.create(
+                            requireType(String.class, left) + requireType(String.class, visit(ast.getRight()))
+                    );
+                }
+                break;
+
+            case "-":
+                if(left.getValue() instanceof BigInteger && visit(ast.getRight()).getValue() instanceof BigInteger) {
+                    return Environment.create(
+                            requireType(BigInteger.class, left).subtract(requireType(BigInteger.class, visit(ast.getRight())))
+                    );
+                }
+                if(left.getValue() instanceof BigDecimal && visit(ast.getRight()).getValue() instanceof BigDecimal) {
+                    return Environment.create(
+                            requireType(BigDecimal.class, left).subtract(requireType(BigDecimal.class, visit(ast.getRight())))
+                    );
+                }
+                break;
+
+            case "*":
+                if(left.getValue() instanceof BigInteger && visit(ast.getRight()).getValue() instanceof BigInteger) {
+                    return Environment.create(
+                            requireType(BigInteger.class, left).multiply(requireType(BigInteger.class, visit(ast.getRight())))
+                    );
+                }
+                if(left.getValue() instanceof BigDecimal && visit(ast.getRight()).getValue() instanceof BigDecimal) {
+                    return Environment.create(
+                            requireType(BigDecimal.class, left).multiply(requireType(BigDecimal.class, visit(ast.getRight())))
+                    );
+                }
+                break;
+
+            case "/":
+                if(left.getValue() instanceof BigInteger && visit(ast.getRight()).getValue() instanceof BigInteger) {
+                    return Environment.create(
+                            requireType(BigInteger.class, left).divide(requireType(BigInteger.class, visit(ast.getRight())))
+                    );
+                }
+                if(left.getValue() instanceof BigDecimal && visit(ast.getRight()).getValue() instanceof BigDecimal) {
+                    return Environment.create(
+                            requireType(BigDecimal.class, left).divide(requireType(BigDecimal.class, visit(ast.getRight())), 2)
+                    );
+                }
+                break;
+
+            case "AND":
+                if(left.getValue() instanceof Boolean && !(Boolean)left.getValue()) {
+                    return Environment.create(false);
+                }
+                if(visit(ast.getRight()).getValue() instanceof Boolean && !(Boolean)visit(ast.getRight()).getValue()) {
+                    return Environment.create(false);
+                }
+                if(left.getValue() instanceof Boolean && visit(ast.getRight()).getValue() instanceof Boolean) {
+                    return Environment.create(true);
+                }
+                break;
+
+            case "OR":
+                if(left.getValue() instanceof Boolean && (Boolean)left.getValue()) {
+                    return Environment.create(true);
+                }
+                if(visit(ast.getRight()).getValue() instanceof Boolean && (Boolean)visit(ast.getRight()).getValue()) {
+                    return Environment.create(true);
+                }
+                if(left.getValue() instanceof Boolean && visit(ast.getRight()).getValue() instanceof Boolean) {
+                    return Environment.create(false);
+                }
+                break;
+
+            case "==":
+                return Environment.create(
+                        Objects.equals(left.getValue(), visit(ast.getRight()).getValue())
+                );
+
+            case "!=":
+                return Environment.create(
+                        !Objects.equals(left.getValue(), visit(ast.getRight()).getValue())
+                );
+
+            case "<":
+                if(left.getValue() instanceof Comparable) {
+                    Environment.PlcObject right = visit(ast.getRight());
+                    if(requireType(left.getValue().getClass(), right) != null) {
+                        return Environment.create(((Comparable) left.getValue()).compareTo(right.getValue()) < 0);
+                    }
+                }
+                break;
+
+            case "<=":
+                if(left.getValue() instanceof Comparable) {
+                    Environment.PlcObject right = visit(ast.getRight());
+                    if(requireType(left.getValue().getClass(), right) != null) {
+                        return Environment.create(((Comparable) left.getValue()).compareTo(right.getValue()) <= 0);
+                    }
+                }
+                break;
+
+            case ">":
+                if(left.getValue() instanceof Comparable) {
+                    Environment.PlcObject right = visit(ast.getRight());
+                    if(requireType(left.getValue().getClass(), right) != null) {
+                        return Environment.create(((Comparable) left.getValue()).compareTo(right.getValue()) > 0);
+                    }
+                }
+                break;
+
+            case ">=":
+                if(left.getValue() instanceof Comparable) {
+                    Environment.PlcObject right = visit(ast.getRight());
+                    if(requireType(left.getValue().getClass(), right) != null) {
+                        return Environment.create(((Comparable) left.getValue()).compareTo(right.getValue()) >= 0);
+                    }
+                }
+                break;
+        }
+        return Environment.NIL;
     }
 
     @Override

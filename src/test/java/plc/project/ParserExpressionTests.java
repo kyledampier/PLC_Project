@@ -185,45 +185,45 @@ final class ParserExpressionTests {
 
     private static Stream<Arguments> testBinaryExpression() {
         return Stream.of(
-//                Arguments.of("Binary And",
-//                        Arrays.asList(
-//                                //expr1 AND expr2
-//                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
-//                                new Token(Token.Type.IDENTIFIER, "AND", 6),
-//                                new Token(Token.Type.IDENTIFIER, "expr2", 10)
-//                        ),
-//                        new Ast.Expr.Binary("AND",
-//                                new Ast.Expr.Access(Optional.empty(), "expr1"),
-//                                new Ast.Expr.Access(Optional.empty(), "expr2")
-//                        )
-//                ),
-//                Arguments.of("Binary Equality",
-//                        Arrays.asList(
-//                                //expr1 == expr2
-//                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
-//                                new Token(Token.Type.OPERATOR, "==", 6),
-//                                new Token(Token.Type.IDENTIFIER, "expr2", 9)
-//                        ),
-//                        new Ast.Expr.Binary("==",
-//                                new Ast.Expr.Access(Optional.empty(), "expr1"),
-//                                new Ast.Expr.Access(Optional.empty(), "expr2")
-//                        )
-//                ),
-//                Arguments.of("Binary: <",
-//                        Arrays.asList(
-//                                // expr1 < expr2 < expr3
-//                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
-//                                new Token(Token.Type.OPERATOR, "<=", 6),
-//                                new Token(Token.Type.IDENTIFIER, "expr2", 7),
-//                                new Token(Token.Type.OPERATOR, "<", 12),
-//                                new Token(Token.Type.IDENTIFIER, "expr3", 3)
-//                        ),
-//                        new Ast.Expr.Binary("<=",
-//                                new Ast.Expr.Access(Optional.empty(), "expr1"),
-//                                new Ast.Expr.Binary("<",
-//                                        new Ast.Expr.Access(Optional.empty(), "expr2"),
-//                                        new Ast.Expr.Access(Optional.empty(), "expr3")))
-//                ),
+                Arguments.of("Binary And",
+                        Arrays.asList(
+                                //expr1 AND expr2
+                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                                new Token(Token.Type.IDENTIFIER, "AND", 6),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 10)
+                        ),
+                        new Ast.Expr.Binary("AND",
+                                new Ast.Expr.Access(Optional.empty(), "expr1"),
+                                new Ast.Expr.Access(Optional.empty(), "expr2")
+                        )
+                ),
+                Arguments.of("Binary Equality",
+                        Arrays.asList(
+                                //expr1 == expr2
+                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                                new Token(Token.Type.OPERATOR, "==", 6),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 9)
+                        ),
+                        new Ast.Expr.Binary("==",
+                                new Ast.Expr.Access(Optional.empty(), "expr1"),
+                                new Ast.Expr.Access(Optional.empty(), "expr2")
+                        )
+                ),
+                Arguments.of("Binary: <",
+                        Arrays.asList(
+                                // expr1 < expr2 < expr3
+                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                                new Token(Token.Type.OPERATOR, "<=", 6),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 7),
+                                new Token(Token.Type.OPERATOR, "<", 12),
+                                new Token(Token.Type.IDENTIFIER, "expr3", 3)
+                        ),
+                        new Ast.Expr.Binary("<=",
+                                new Ast.Expr.Access(Optional.empty(), "expr1"),
+                                new Ast.Expr.Binary("<",
+                                        new Ast.Expr.Access(Optional.empty(), "expr2"),
+                                        new Ast.Expr.Access(Optional.empty(), "expr3")))
+                ),
                 Arguments.of("Missing Operands",
                         Arrays.asList(
                                 new Token(Token.Type.IDENTIFIER, "expr1", 0),

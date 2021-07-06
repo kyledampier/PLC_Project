@@ -79,12 +79,9 @@ public final class Parser {
                 String functionName = tokens.get(-1).getLiteral();
                 if (match("(")) {
                     List<String> params = new ArrayList<>();
-
                     // get all params
                     while (match(Token.Type.IDENTIFIER)) {
-
                         params.add(tokens.get(-1).getLiteral());
-
                         if (!match(",")) {
                             if (!peek(")")) {
                                 throw errorHandle("Expected comma between identifiers");
@@ -104,12 +101,13 @@ public final class Parser {
 
                     // get all statements
                     List<Ast.Stmt> statements = new ArrayList<>();
-                    while (!match("END")) {
+                    while (!match("END") && tokens.has(0)) {
                         statements.add(parseStatement());
                     }
-
+                    if(!tokens.get(-1).getLiteral().equals("END")) {
+                        throw new ParseException("missing END", tokens.get(-1).getIndex());
+                    }
                     return new Ast.Method(functionName, params, statements);
-
                 } else {
                     throw errorHandle("Expected Parenthesis");
                 }
@@ -126,6 +124,13 @@ public final class Parser {
      * If the next tokens do not start a declaration, if, while, or return
      * statement, then it is an expression/assignment statement.
      */
+    //statement ::=
+    //    'LET' identifier ('=' expression)? ';' |
+    //    'IF' expression 'DO' statement* ('ELSE' statement*)? 'END' |
+    //    'FOR' identifier 'IN' expression 'DO' statement* 'END' |
+    //    'WHILE' expression 'DO' statement* 'END' |
+    //    'RETURN' expression ';' |
+    //    expression ('=' expression)? ';'
     public Ast.Stmt parseStatement() throws ParseException {
         try {
             if (match("LET")) {
@@ -165,6 +170,7 @@ public final class Parser {
      * method should only be called if the next tokens start a declaration
      * statement, aka {@code LET}.
      */
+    //    'LET' identifier ('=' expression)? ';'
     public Ast.Stmt.Declaration parseDeclarationStatement() throws ParseException {
         if (match(Token.Type.IDENTIFIER)) {
             String identifier = tokens.get(-1).getLiteral();
@@ -197,7 +203,7 @@ public final class Parser {
             List<Ast.Stmt> doStatements = new ArrayList<>();
             List<Ast.Stmt> elseStatements = new ArrayList<>();
 
-            while (!match("END")) {
+            while (!match("END") && tokens.has(0)) {
                 if (match("ELSE")) {
                     if (!isElse) {
                         isElse = true;
@@ -211,6 +217,9 @@ public final class Parser {
                     doStatements.add(parseStatement());
                 }
             }
+            if(!tokens.get(-1).getLiteral().equals("END")) {
+                throw new ParseException("Missing END", tokens.get(-1).getIndex());
+            }
 
             return new Ast.Stmt.If(expression, doStatements, elseStatements);
         }
@@ -222,6 +231,7 @@ public final class Parser {
      * should only be called if the next tokens start a for statement, aka
      * {@code FOR}.
      */
+    //    'FOR' identifier 'IN' expression 'DO' statement* 'END'
     public Ast.Stmt.For parseForStatement() throws ParseException {
         if (match(Token.Type.IDENTIFIER)) {
             String name = tokens.get(-1).getLiteral();
@@ -236,8 +246,11 @@ public final class Parser {
 
             List<Ast.Stmt> statements = new ArrayList<>();
 
-            while (!match("END")) {
+            while (!match("END") && tokens.has(0)) {
                 statements.add(parseStatement());
+            }
+            if(!tokens.get(-1).getLiteral().equals("END")) {
+                throw errorHandle("Missing END");
             }
 
             return new Ast.Stmt.For(name, expression, statements);
@@ -258,8 +271,11 @@ public final class Parser {
 
         List<Ast.Stmt> statements = new ArrayList<>();
 
-        while (!match("END")) {
+        while (!match("END") && tokens.has(0)) {
             statements.add(parseStatement());
+        }
+        if(!tokens.get(-1).getLiteral().equals("END")) {
+            throw new ParseException("missing END", tokens.get(-1).getIndex());
         }
 
         return new Ast.Stmt.While(expression, statements);
@@ -477,11 +493,11 @@ public final class Parser {
                     if (match(")")) { // Check closing parentheses
                         return new Ast.Expr.Function(Optional.empty(), name, args);
                     } else {
-                        throw new ParseException("Closing parentheses expected", tokens.get(0).getIndex());
+                        throw new ParseException("Closing parentheses expected", tokens.get(-1).getIndex());
                     }
                 } else {
                     if (!tokens.get(-1).getLiteral().equals(")")) {
-                        throw new ParseException("Closing parentheses expected", tokens.get(0).getIndex());
+                        throw new ParseException("Closing parentheses expected", tokens.get(-1).getIndex());
                     } else {
                         return new Ast.Expr.Function(Optional.empty(), name, Collections.emptyList());
                     }
