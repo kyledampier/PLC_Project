@@ -56,17 +56,50 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Stmt.If ast) {
-        throw new UnsupportedOperationException(); //TODO
+        if(requireType(Boolean.class, visit(ast.getCondition())) != null) {
+            try {
+                scope = new Scope(scope);
+                if((Boolean) visit(ast.getCondition()).getValue()) {
+                    ast.getThenStatements().forEach(this::visit);
+                } else {
+                    ast.getElseStatements().forEach(this::visit);
+                }
+            } finally {
+                scope = scope.getParent();
+            }
+        }
+        return Environment.NIL;
+//        throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
     public Environment.PlcObject visit(Ast.Stmt.For ast) {
-        throw new UnsupportedOperationException(); //TODO
+        if(requireType(Iterable.class, visit(ast.getValue())) != null) {
+            ((Iterable<Environment.PlcObject>) ast.getValue()).forEach(plcObject -> {
+                try {
+                    scope = new Scope(scope);
+                    scope.defineVariable(ast.getName(), visit(ast.getValue()));
+                } finally {
+                    scope = scope.getParent();
+                }
+            });
+        }
+        return Environment.NIL;
+//        throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
     public Environment.PlcObject visit(Ast.Stmt.While ast) {
-        throw new UnsupportedOperationException(); //TODO (in lecture)
+        while(requireType(Boolean.class, visit(ast.getCondition()))) {
+            try { // enter new scope
+                scope = new Scope(scope);
+                ast.getStatements().forEach(this::visit);
+            } finally { // restore scope
+                scope = scope.getParent();
+            }
+        }
+        return Environment.NIL;
+//        throw new UnsupportedOperationException(); //TODO (in lecture)
     }
 
     @Override
