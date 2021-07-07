@@ -31,7 +31,13 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Field ast) {
-        throw new UnsupportedOperationException(); //TODO
+        Environment.PlcObject value = Environment.NIL;
+        if(ast.getValue().isPresent()) {
+            value = visit(ast.getValue().get());
+        }
+        scope.defineVariable(ast.getName(), value);
+        return Environment.NIL;
+//        throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
@@ -41,17 +47,49 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Stmt.Expression ast) {
-        throw new UnsupportedOperationException(); //TODO
+        visit(ast.getExpression());
+        return Environment.NIL;
+//        throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
     public Environment.PlcObject visit(Ast.Stmt.Declaration ast) {
-        throw new UnsupportedOperationException(); //TODO (in lecture)
+        Environment.PlcObject value = Environment.NIL;
+        if(ast.getValue().isPresent()) {
+            value = visit(ast.getValue().get());
+        }
+        scope.defineVariable(ast.getName(), value);
+        return Environment.NIL;
+//        throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
     public Environment.PlcObject visit(Ast.Stmt.Assignment ast) {
-        throw new UnsupportedOperationException(); //TODO
+        Ast.Expr receiver = ast.getReceiver();
+       if(receiver instanceof Ast.Expr.Access) {
+           if(((Ast.Expr.Access) receiver).getReceiver().isPresent()) {
+
+           }
+//            if(((Ast.Expr.Access) receiver.getValue()).getReceiver().isPresent()) {
+//
+//            } else {
+//                // lookup variable and set in current scope
+//                Environment.Variable variable = scope.lookupVariable(((Ast.Expr.Access) receiver.getValue()).getName());
+//                variable.setValue(receiver);
+//            }
+        }
+
+//        if(requireType(Ast.Expr.Access.class, receiver) != null) {
+//            if(((Ast.Expr.Access) receiver.getValue()).getReceiver().isPresent()) {
+//
+//            } else {
+//                // lookup variable and set in current scope
+//                Environment.Variable variable = scope.lookupVariable(((Ast.Expr.Access) receiver.getValue()).getName());
+//                variable.setValue(receiver);
+//            }
+//        }
+//        throw new UnsupportedOperationException(); //TODO
+        return Environment.NIL;
     }
 
     @Override
@@ -125,7 +163,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     @Override
     public Environment.PlcObject visit(Ast.Expr.Binary ast) {
         Environment.PlcObject left = visit(ast.getLeft());
-//        Environment.PlcObject visit(ast.getRight()) = visit(ast.getRight());
+
         switch (ast.getOperator()) {
             case "+":
                 if(left.getValue() instanceof BigInteger && visit(ast.getRight()).getValue() instanceof BigInteger) {
@@ -259,7 +297,11 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Expr.Access ast) {
-        throw new UnsupportedOperationException(); //TODO
+
+        if(ast.getReceiver().isPresent()) {
+            return visit(ast.getReceiver().get()).getField(ast.getName()).getValue();
+        }
+        return scope.lookupVariable(ast.getName()).getValue();
     }
 
     @Override
