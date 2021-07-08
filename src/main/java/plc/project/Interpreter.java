@@ -88,19 +88,16 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Stmt.Assignment ast) {
-        Ast.Expr receiver = ast.getReceiver();
-       if(receiver instanceof Ast.Expr.Access) {
+        Ast.Expr access = ast.getReceiver();
+        if(access instanceof Ast.Expr.Access) {
 
-           Environment.Variable variable = scope.lookupVariable(((Ast.Expr.Access) receiver).getName());
-           if (ast.getValue() != null) {
-               // Set Variable
-               // Ex: x = 1;
-               variable.setValue(visit(ast.getValue()));
-           } else {
-               // value was null
-               // Ex: x;
-               return visit(ast.getReceiver());
-           }
+            if(((Ast.Expr.Access) access).getReceiver().isPresent()) {
+                visit(((Ast.Expr.Access) access).getReceiver().get()) // evaluates the receiver
+                        .setField(((Ast.Expr.Access) access).getName(), visit(ast.getValue())); // sets the access as a field for the receiver
+            } else {
+                Environment.Variable variable = scope.lookupVariable(((Ast.Expr.Access) access).getName());
+                variable.setValue(visit(ast.getValue()));
+            }
         }
 
         return Environment.NIL;

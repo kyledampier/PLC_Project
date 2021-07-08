@@ -146,6 +146,7 @@ final class InterpreterTests {
                 new Ast.Expr.Access(Optional.of(new Ast.Expr.Access(Optional.empty(), "object")),"field"),
                 new Ast.Expr.Literal(BigInteger.ONE)
         ), Environment.NIL.getValue(), scope);
+
         Assertions.assertEquals(BigInteger.ONE, object.lookupVariable("field").getValue().getValue());
     }
 
