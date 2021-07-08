@@ -45,7 +45,6 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         }
         scope.defineVariable(ast.getName(), value);
         return Environment.NIL;
-//        throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
@@ -321,11 +320,22 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Expr.Function ast) {
-//        if (ast.getReceiver().isPresent()) {
-//            // find name and make function
-//            Environment.Function function = scope.lookupFunction();
-//        }
-        throw new UnsupportedOperationException(); //TODO
+        // Convert args
+        List<Environment.PlcObject> arguments = new ArrayList<>();
+        for (Ast.Expr argument : ast.getArguments()) {
+            arguments.add(visit(argument));
+        }
+
+        if (!ast.getReceiver().isPresent()) {
+            // Is a function
+            Environment.Function function = scope.lookupFunction(ast.getName(), ast.getArguments().size());
+            return function.invoke(arguments);
+        } else {
+            // Is a Method
+            Environment.PlcObject obj = visit(ast.getReceiver().get());
+            return obj.callMethod(ast.getName(), arguments);
+        }
+
     }
 
     /**
