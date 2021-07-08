@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -26,7 +27,14 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Source ast) {
-        throw new UnsupportedOperationException(); //TODO
+        for(Ast.Field field : ast.getFields()) {
+            visit(field);
+        }
+        for(Ast.Method method : ast.getMethods()) {
+            visit(method);
+        }
+
+        return scope.lookupFunction("main", 0).invoke(Collections.emptyList());
     }
 
     @Override
@@ -41,8 +49,26 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     }
 
     @Override
-    public Environment.PlcObject visit(Ast.Method ast) {
-        throw new UnsupportedOperationException(); //TODO
+    public Environment.PlcObject visit(Ast.Method ast) { // defines function in current scope
+        scope.defineFunction(ast.getName(), ast.getParameters().size(), args -> {
+            try {
+                scope = new Scope(scope);
+                for(int i = 0; i < args.size(); i++) { // define arguments
+                    scope.defineVariable(ast.getParameters().get(i), args.get(i));
+                }
+                for(Ast.Stmt stmt : ast.getStatements()) { // evaluate statements
+                    visit(stmt);
+                }
+            }
+            catch(Return r) {
+                return r.value;
+            }
+            finally { // restore scope
+                scope = scope.getParent();
+            }
+            return Environment.NIL;
+        });
+        return Environment.NIL;
     }
 
     @Override
@@ -129,7 +155,11 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Stmt.Return ast) {
-        throw new UnsupportedOperationException(); //TODO
+
+        Environment.PlcObject value = visit(ast.getValue());
+        throw new Return(value);
+
+//        throw new UnsupportedOperationException(); //TODO
     }
 
     @Override
