@@ -319,6 +319,27 @@ final class InterpreterTests {
                                 new Ast.Expr.Literal(new BigDecimal("3.4"))
                         ),
                         new BigDecimal("0.4")
+                ),
+                Arguments.of("Decimal Divide by Zero",
+                        new Ast.Expr.Binary("/",
+                                new Ast.Expr.Literal(new BigDecimal("1.2")),
+                                new Ast.Expr.Literal(new BigDecimal("0.0"))
+                        ),
+                        null
+                ),
+                Arguments.of("Integer Divide by Zero",
+                        new Ast.Expr.Binary("/",
+                                new Ast.Expr.Literal(new BigDecimal("10")),
+                                new Ast.Expr.Literal(new BigDecimal("0"))
+                        ),
+                        null
+                ),
+                Arguments.of("Integer Decimal Subtraction",
+                        new Ast.Expr.Binary("-",
+                                new Ast.Expr.Literal(new BigDecimal("10.5")),
+                                new Ast.Expr.Literal(new BigInteger("1"))
+                        ),
+                        null
                 )
         );
     }

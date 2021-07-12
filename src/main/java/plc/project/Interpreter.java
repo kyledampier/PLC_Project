@@ -181,59 +181,92 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
         switch (ast.getOperator()) {
             case "+":
-                if(left.getValue() instanceof BigInteger && visit(ast.getRight()).getValue() instanceof BigInteger) {
-                    return Environment.create(
-                            requireType(BigInteger.class, left).add(requireType(BigInteger.class, visit(ast.getRight())))
-                    );
+                if(left.getValue() instanceof BigInteger) { // integer addition
+                    if(visit(ast.getRight()).getValue() instanceof BigInteger) {
+                        return Environment.create(
+                                requireType(BigInteger.class, left).add(requireType(BigInteger.class, visit(ast.getRight())))
+                        );
+                    }
+                    throw new RuntimeException();
                 }
-                if(left.getValue() instanceof BigDecimal && visit(ast.getRight()).getValue() instanceof BigDecimal) {
-                    return Environment.create(
-                            requireType(BigDecimal.class, left).add(requireType(BigDecimal.class, visit(ast.getRight())))
-                    );
+                if(left.getValue() instanceof BigDecimal) { // decimal addition
+                    if(visit(ast.getRight()).getValue() instanceof BigDecimal) {
+                        return Environment.create(
+                                requireType(BigDecimal.class, left).add(requireType(BigDecimal.class, visit(ast.getRight())))
+                        );
+                    }
+                    throw new RuntimeException();
                 }
-                if(left.getValue() instanceof String && visit(ast.getRight()).getValue() instanceof String) {
-                    return Environment.create(
-                            requireType(String.class, left) + requireType(String.class, visit(ast.getRight()))
-                    );
+                if(left.getValue() instanceof String) {
+                    if(visit(ast.getRight()).getValue() instanceof String) { // string concatenation
+                        return Environment.create(
+                                requireType(String.class, left) + requireType(String.class, visit(ast.getRight()))
+                        );
+                    }
+                    throw new RuntimeException();
                 }
                 break;
 
             case "-":
-                if(left.getValue() instanceof BigInteger && visit(ast.getRight()).getValue() instanceof BigInteger) {
-                    return Environment.create(
-                            requireType(BigInteger.class, left).subtract(requireType(BigInteger.class, visit(ast.getRight())))
-                    );
+                if(left.getValue() instanceof BigInteger) {
+                    if(visit(ast.getRight()).getValue() instanceof BigInteger) { // integer subtraction
+                        return Environment.create(
+                                requireType(BigInteger.class, left).subtract(requireType(BigInteger.class, visit(ast.getRight())))
+                        );
+                    }
+                    throw new RuntimeException();
                 }
-                if(left.getValue() instanceof BigDecimal && visit(ast.getRight()).getValue() instanceof BigDecimal) {
-                    return Environment.create(
-                            requireType(BigDecimal.class, left).subtract(requireType(BigDecimal.class, visit(ast.getRight())))
-                    );
+                if(left.getValue() instanceof BigDecimal) {
+                    if(visit(ast.getRight()).getValue() instanceof BigDecimal) {
+                        return Environment.create(
+                                requireType(BigDecimal.class, left).subtract(requireType(BigDecimal.class, visit(ast.getRight())))
+                        );
+                    }
+                    throw new RuntimeException();
                 }
                 break;
 
             case "*":
-                if(left.getValue() instanceof BigInteger && visit(ast.getRight()).getValue() instanceof BigInteger) {
-                    return Environment.create(
-                            requireType(BigInteger.class, left).multiply(requireType(BigInteger.class, visit(ast.getRight())))
-                    );
+                if(left.getValue() instanceof BigInteger) { // integer multiplication
+                    if(visit(ast.getRight()).getValue() instanceof BigInteger) {
+                        return Environment.create(
+                                requireType(BigInteger.class, left).multiply(requireType(BigInteger.class, visit(ast.getRight())))
+                        );
+                    }
+                    throw new RuntimeException();
                 }
-                if(left.getValue() instanceof BigDecimal && visit(ast.getRight()).getValue() instanceof BigDecimal) {
-                    return Environment.create(
-                            requireType(BigDecimal.class, left).multiply(requireType(BigDecimal.class, visit(ast.getRight())))
-                    );
+                if(left.getValue() instanceof BigDecimal) { // decimal multiplication
+                    if(visit(ast.getRight()).getValue() instanceof BigDecimal) {
+                        return Environment.create(
+                                requireType(BigDecimal.class, left).multiply(requireType(BigDecimal.class, visit(ast.getRight())))
+                        );
+                    }
+                    throw new RuntimeException();
                 }
                 break;
 
             case "/":
-                if(left.getValue() instanceof BigInteger && visit(ast.getRight()).getValue() instanceof BigInteger) {
-                    return Environment.create(
-                            requireType(BigInteger.class, left).divide(requireType(BigInteger.class, visit(ast.getRight())))
-                    );
+                if(left.getValue() instanceof BigInteger) { // integer division
+                    if(visit(ast.getRight()).getValue() instanceof BigInteger) {
+                        if(((BigInteger) visit(ast.getRight()).getValue()).intValue() == 0) {
+                            throw new RuntimeException();
+                        }
+                        return Environment.create(
+                                requireType(BigInteger.class, left).divide(requireType(BigInteger.class, visit(ast.getRight())))
+                        );
+                    }
+                    throw new RuntimeException();
                 }
-                if(left.getValue() instanceof BigDecimal && visit(ast.getRight()).getValue() instanceof BigDecimal) {
-                    return Environment.create(
-                            requireType(BigDecimal.class, left).divide(requireType(BigDecimal.class, visit(ast.getRight())), 2)
-                    );
+                if(left.getValue() instanceof BigDecimal) { // decimal division
+                    if(visit(ast.getRight()).getValue() instanceof BigDecimal) {
+                        if(((BigDecimal) visit(ast.getRight()).getValue()).doubleValue() == 0) { // divide by 0 error
+                            throw new RuntimeException();
+                        }
+                        return Environment.create(
+                                requireType(BigDecimal.class, left).divide(requireType(BigDecimal.class, visit(ast.getRight())), RoundingMode.HALF_EVEN)
+                        );
+                    }
+                    throw new RuntimeException();
                 }
                 break;
 
@@ -244,8 +277,11 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
                 if(visit(ast.getRight()).getValue() instanceof Boolean && !(Boolean)visit(ast.getRight()).getValue()) {
                     return Environment.create(false);
                 }
-                if(left.getValue() instanceof Boolean && visit(ast.getRight()).getValue() instanceof Boolean) {
-                    return Environment.create(true);
+                if(left.getValue() instanceof Boolean) {
+                    if(visit(ast.getRight()).getValue() instanceof Boolean) {
+                        return Environment.create(true);
+                    }
+                    throw new RuntimeException();
                 }
                 break;
 
@@ -256,8 +292,11 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
                 if(visit(ast.getRight()).getValue() instanceof Boolean && (Boolean)visit(ast.getRight()).getValue()) {
                     return Environment.create(true);
                 }
-                if(left.getValue() instanceof Boolean && visit(ast.getRight()).getValue() instanceof Boolean) {
-                    return Environment.create(false);
+                if(left.getValue() instanceof Boolean) {
+                    if(visit(ast.getRight()).getValue() instanceof Boolean) {
+                        return Environment.create(false);
+                    }
+                    throw new RuntimeException();
                 }
                 break;
 
