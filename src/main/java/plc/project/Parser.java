@@ -58,10 +58,14 @@ public final class Parser {
     /**
      * Parses the {@code f     * next tokens start a field, aka {@code LET}.ield} rule. This method should only be called if the
      */
-    // field ::= 'LET' identifier ('=' expression)? ';'
+    // field  ::= 'LET' identifier ':' identifier ( '=' expression )? ';'
     public Ast.Field parseField() throws ParseException {
         try {
             Ast.Stmt.Declaration declaration = parseDeclarationStatement();
+            if (declaration.getTypeName().isPresent()) {
+                return new Ast.Field(declaration.getName(), declaration.getTypeName().get(), declaration.getValue());
+            }
+
             return new Ast.Field(declaration.getName(), declaration.getValue());
         } catch (ParseException p) {
             throw new ParseException(p.getMessage(), p.getIndex());
@@ -76,12 +80,27 @@ public final class Parser {
     public Ast.Method parseMethod() throws ParseException {
         try {
             if (match(Token.Type.IDENTIFIER)) {
+
                 String functionName = tokens.get(-1).getLiteral();
+
                 if (match("(")) {
+
                     List<String> params = new ArrayList<>();
+                    List<String> paramTypes = new ArrayList<>();
+
                     // get all params
                     while (match(Token.Type.IDENTIFIER)) {
+
                         params.add(tokens.get(-1).getLiteral());
+
+                        if (match(":", Token.Type.IDENTIFIER)) {
+                            // Type is required
+                            paramTypes.add(tokens.get(-1).getLiteral());
+                        } else {
+                            // Type not found
+                            throw errorHandle("Type not found while parsing method parameters");
+                        }
+
                         if (!match(",")) {
                             if (!peek(")")) {
                                 throw errorHandle("Expected comma between identifiers");
@@ -92,6 +111,12 @@ public final class Parser {
                     // check for closing parenthesis
                     if (!match(")")) {
                         throw errorHandle("Expected Parenthesis");
+                    }
+
+                    Optional<String> returnType = Optional.empty();
+                    // check for return type
+                    if (match(":", Token.Type.IDENTIFIER)) {
+                        returnType = Optional.of(tokens.get(-1).getLiteral());
                     }
 
                     // check for DO
@@ -107,7 +132,7 @@ public final class Parser {
                     if(!tokens.get(-1).getLiteral().equals("END")) {
                         throw new ParseException("missing END", tokens.get(-1).getIndex());
                     }
-                    return new Ast.Method(functionName, params, statements);
+                    return new Ast.Method(functionName, params, paramTypes, returnType, statements);
                 } else {
                     throw errorHandle("Expected Parenthesis");
                 }
@@ -170,18 +195,26 @@ public final class Parser {
      * method should only be called if the next tokens start a declaration
      * statement, aka {@code LET}.
      */
-    //    'LET' identifier ('=' expression)? ';'
+    //    'LET' identifier ( ':' identifier )? | expression ) ( '=' expression )? ';'
     public Ast.Stmt.Declaration parseDeclarationStatement() throws ParseException {
         if (match(Token.Type.IDENTIFIER)) {
             String identifier = tokens.get(-1).getLiteral();
+            Optional<String> type = Optional.empty();
+            // check for type
+            if (match(":")) {
+                if (match(Token.Type.IDENTIFIER)) {
+                    type = Optional.of(tokens.get(-1).getLiteral());
+                }
+            }
+
             if (match("=")) {
                 Ast.Expr rhs = parseExpression();
                 if (match(";")) {
-                    return new Ast.Stmt.Declaration(identifier, Optional.of(rhs));
+                    return new Ast.Stmt.Declaration(identifier, type, Optional.of(rhs));
                 }
             } else {
                 if (match(";")) {
-                    return new Ast.Stmt.Declaration(identifier, Optional.empty());
+                    return new Ast.Stmt.Declaration(identifier, type, Optional.empty());
                 }
             }
         } else {
