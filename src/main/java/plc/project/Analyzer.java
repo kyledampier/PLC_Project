@@ -66,7 +66,10 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Stmt.Expression ast) {
-        throw new UnsupportedOperationException();  // TODO
+        if (!(ast.getExpression() instanceof Ast.Expr.Function)) {
+            throw new RuntimeException("Expected Ast.Expr.Function");
+        }
+        return null;
     }
 
     @Override
@@ -85,23 +88,33 @@ public final class Analyzer implements Ast.Visitor<Void> {
         if (ast.getValue().isPresent()) {
             // has a value
             visit(ast.getValue().get());
-            ast.setVariable(scope.defineVariable(ast.getName(), ast.getName(), type, ast.getVariable().getValue()));
 
             if (type == null) {
-                type = ast.getVariable().getType();
+                type = ast.getValue().get().getType();
             }
 
             requireAssignable(type, ast.getValue().get().getType());
         }
 
-        ast.setVariable(scope.defineVariable(ast.getName(), ast.getName(), type, Environment.NIL));
+        Environment.Variable var = scope.defineVariable(ast.getName(), ast.getName(), type, Environment.NIL);
+        ast.setVariable(var);
 
         return null;
     }
 
     @Override
     public Void visit(Ast.Stmt.Assignment ast) {
-        throw new UnsupportedOperationException();  // TODO
+        if (!(ast.getReceiver() instanceof Ast.Expr.Access)) {
+            // is not an Access, throw error
+            throw new RuntimeException("Expected Access Expression");
+        }
+
+        visit(ast.getReceiver());
+        visit(ast.getValue());
+
+        requireAssignable(ast.getReceiver().getType(), ast.getValue().getType());
+
+        return null;
     }
 
     @Override
@@ -220,7 +233,12 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Expr.Group ast) {
-        throw new UnsupportedOperationException();  // TODO
+        if (ast.getExpression() instanceof Ast.Expr.Binary) {
+            visit(ast.getExpression());
+            ast.setType(ast.getExpression().getType());
+            return null;
+        }
+        throw new RuntimeException("Expected an Ast.Expr.Binary");
     }
 
     @Override
@@ -273,12 +291,57 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Expr.Access ast) {
-        throw new UnsupportedOperationException();  // TODO
+        if (ast.getReceiver().isPresent()) {
+            // is field
+            Ast.Expr expr = ast.getReceiver().get();
+            visit(expr);
+            ast.setVariable(expr.getType().getField(ast.getName()));
+        } else {
+            // is not field
+            ast.setVariable(scope.lookupVariable(ast.getName()));
+        }
+
+        return null;
     }
 
     @Override
     public Void visit(Ast.Expr.Function ast) {
-        throw new UnsupportedOperationException();  // TODO
+
+        if (ast.getReceiver().isPresent()) {
+            // is Method
+            Ast.Expr expr = ast.getReceiver().get();
+            visit(expr);
+
+            Environment.Function func = expr.getType().getMethod(ast.getName(), ast.getArguments().size());
+
+            List<Ast.Expr> args = ast.getArguments();
+            List<Environment.Type> argTypes = func.getParameterTypes();
+
+            // starts at 1
+            for (int i = 1; i < args.size(); i++) {
+                visit(args.get(i));
+                requireAssignable(argTypes.get(i), args.get(i).getType());
+            }
+
+            ast.setFunction(func);
+        } else {
+            // is Function
+
+            Environment.Function func = scope.lookupFunction(ast.getName(), ast.getArguments().size());
+
+            List<Ast.Expr> args = ast.getArguments();
+            List<Environment.Type> argTypes = func.getParameterTypes();
+
+            // starts at 0
+            for (int i = 0; i < args.size(); i++) {
+                visit(args.get(i));
+                requireAssignable(argTypes.get(i), args.get(i).getType());
+            }
+
+            ast.setFunction(func);
+        }
+
+        return null;
     }
 
     public static void requireAssignable(Environment.Type target, Environment.Type type) {
