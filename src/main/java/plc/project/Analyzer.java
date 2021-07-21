@@ -79,7 +79,17 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Stmt.Assignment ast) {
-        throw new UnsupportedOperationException();  // TODO
+        if (!(ast.getReceiver() instanceof Ast.Expr.Access)) {
+            // is not an Access, throw error
+            throw new RuntimeException("Expected Access Expression");
+        }
+
+        visit(ast.getReceiver());
+        visit(ast.getValue());
+
+        requireAssignable(ast.getReceiver().getType(), ast.getValue().getType());
+
+        return null;
     }
 
     @Override
