@@ -65,7 +65,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
             visit(ast.getValue().get());
 
             if (type == null) {
-                type = ast.getVariable().getType();
+                type = ast.getValue().get().getType();
             }
 
             requireAssignable(type, ast.getValue().get().getType());
@@ -149,7 +149,12 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Expr.Group ast) {
-        throw new UnsupportedOperationException();  // TODO
+        if (ast.getExpression() instanceof Ast.Expr.Binary) {
+            visit(ast.getExpression());
+            ast.setType(ast.getExpression().getType());
+            return null;
+        }
+        throw new RuntimeException("Expected an Ast.Expr.Binary");
     }
 
     @Override
@@ -202,7 +207,17 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Expr.Access ast) {
-        throw new UnsupportedOperationException();  // TODO
+        if (ast.getReceiver().isPresent()) {
+            // is field
+            Ast.Expr expr = ast.getReceiver().get();
+            visit(expr);
+            ast.setVariable(expr.getType().getField(ast.getName()));
+        } else {
+            // is not field
+            ast.setVariable(scope.lookupVariable(ast.getName()));
+        }
+
+        return null;
     }
 
     @Override
