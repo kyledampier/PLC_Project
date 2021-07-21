@@ -41,7 +41,10 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Stmt.Expression ast) {
-        throw new UnsupportedOperationException();  // TODO
+        if (!(ast.getExpression() instanceof Ast.Expr.Function)) {
+            throw new RuntimeException("Expected Ast.Expr.Function");
+        }
+        return null;
     }
 
     @Override
@@ -60,7 +63,6 @@ public final class Analyzer implements Ast.Visitor<Void> {
         if (ast.getValue().isPresent()) {
             // has a value
             visit(ast.getValue().get());
-            ast.setVariable(scope.defineVariable(ast.getName(), ast.getName(), type, ast.getVariable().getValue()));
 
             if (type == null) {
                 type = ast.getVariable().getType();
@@ -69,7 +71,8 @@ public final class Analyzer implements Ast.Visitor<Void> {
             requireAssignable(type, ast.getValue().get().getType());
         }
 
-        ast.setVariable(scope.defineVariable(ast.getName(), ast.getName(), type, Environment.NIL));
+        Environment.Variable var = scope.defineVariable(ast.getName(), ast.getName(), type, Environment.NIL);
+        ast.setVariable(var);
 
         return null;
     }
