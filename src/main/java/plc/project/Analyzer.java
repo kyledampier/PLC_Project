@@ -46,7 +46,32 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Stmt.Declaration ast) {
-        throw new UnsupportedOperationException();  // TODO
+
+        if (!ast.getTypeName().isPresent() && !ast.getValue().isPresent()) {
+            throw new RuntimeException("Expected type or value when declaring a variable.");
+        }
+
+        Environment.Type type =  null;
+
+        if (ast.getTypeName().isPresent()) {
+            type = Environment.getType(ast.getTypeName().get());
+        }
+
+        if (ast.getValue().isPresent()) {
+            // has a value
+            visit(ast.getValue().get());
+            ast.setVariable(scope.defineVariable(ast.getName(), ast.getName(), type, ast.getVariable().getValue()));
+
+            if (type == null) {
+                type = ast.getVariable().getType();
+            }
+
+            requireAssignable(type, ast.getValue().get().getType());
+        }
+
+        ast.setVariable(scope.defineVariable(ast.getName(), ast.getName(), type, Environment.NIL));
+
+        return null;
     }
 
     @Override
@@ -76,7 +101,47 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Expr.Literal ast) {
-        throw new UnsupportedOperationException();  // TODO
+
+        Object literal = ast.getLiteral();
+
+        if (literal == null)
+            ast.setType(Environment.Type.NIL);
+
+        if (literal instanceof Boolean)
+            ast.setType(Environment.Type.BOOLEAN);
+
+        if (literal instanceof Character)
+            ast.setType(Environment.Type.CHARACTER);
+
+        if (literal instanceof String)
+            ast.setType(Environment.Type.STRING);
+
+        if (literal instanceof BigInteger){
+            // Check for size
+            BigInteger value = (BigInteger) literal;
+            if (value.compareTo(BigInteger.valueOf(Integer.MAX_VALUE)) <= 0 &&
+                    value.compareTo(BigInteger.valueOf(Integer.MIN_VALUE)) >= 0)
+                ast.setType(Environment.Type.INTEGER);
+            else
+                throw new RuntimeException("Value of Integer is not in the range of and Integer.");
+
+            return null;
+        }
+
+
+        if (literal instanceof BigDecimal){
+            // Check for size
+            BigDecimal value = (BigDecimal) literal;
+            if (value.compareTo(BigDecimal.valueOf(Double.MAX_VALUE)) <= 0 &&
+                    value.compareTo(BigDecimal.valueOf(Double.MIN_VALUE)) >= 0)
+                ast.setType(Environment.Type.DECIMAL);
+            else
+                throw new RuntimeException("Value of Decimal is not in the range of and Double.");
+
+            return null;
+        }
+
+        return null;
     }
 
     @Override
@@ -86,7 +151,50 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Expr.Binary ast) {
-        throw new UnsupportedOperationException();  // TODO
+        Ast.Expr left = ast.getLeft();
+        visit(left);
+        Ast.Expr right = ast.getRight();
+        visit(right);
+
+        switch (ast.getOperator()) {
+            case "AND": case "OR":
+                if (left.getType() == Environment.Type.BOOLEAN &&
+                        right.getType() == Environment.Type.BOOLEAN) {
+                    ast.setType(Environment.Type.BOOLEAN);
+                    return null;
+                }
+                throw new RuntimeException("Boolean Type Expected");
+            case "<": case "<=": case ">": case ">=": case "==": case "!=":
+                requireAssignable(Environment.Type.COMPARABLE, left.getType());
+                requireAssignable(Environment.Type.COMPARABLE, right.getType());
+                requireAssignable(left.getType(), right.getType());
+                ast.setType(Environment.Type.BOOLEAN);
+                break;
+            case "+":
+                // Either side is a string
+                if (left.getType() == Environment.Type.STRING ||
+                        right.getType() == Environment.Type.STRING) {
+                    ast.setType(Environment.Type.STRING);
+                    break;
+                }
+            case "-": case "*": case "/": // case '+': if not a STRING
+
+                // The left hand side must be an Integer/Decimal and
+                // both the right hand side and result type are the same as the left.
+
+                if (left.getType() == Environment.Type.INTEGER ||
+                        left.getType() == Environment.Type.DECIMAL) {
+                    if (left.getType() == right.getType()) {
+                        ast.setType(left.getType());
+                        return null;
+                    }
+                }
+                throw new RuntimeException("Expected Integer or Decimal");
+            default:
+                return null;
+        }
+
+        return null;
     }
 
     @Override
@@ -100,7 +208,21 @@ public final class Analyzer implements Ast.Visitor<Void> {
     }
 
     public static void requireAssignable(Environment.Type target, Environment.Type type) {
-        throw new UnsupportedOperationException();  // TODO
+        if (target.getName().equals(type.getName()))
+            return;
+
+        switch (target.getName()) {
+            case "Any":
+                return;
+            case "Comparable":
+                if (type.getName().equals("Integer") ||
+                        type.getName().equals("Decimal")||
+                        type.getName().equals("Character") ||
+                        type.getName().equals("String"))
+                    return;
+        }
+
+        throw new RuntimeException("Wrong Type");
     }
 
 }
