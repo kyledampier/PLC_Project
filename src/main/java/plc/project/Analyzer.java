@@ -2,6 +2,7 @@ package plc.project;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -14,6 +15,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     public Scope scope;
     private Ast.Method method;
+    private Ast.Expr returnType;
 
     public Analyzer(Scope parent) {
         scope = new Scope(parent);
@@ -36,7 +38,30 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Method ast) {
-        throw new UnsupportedOperationException();  // TODO
+        List<Environment.Type> paramTypes = new ArrayList<>();
+        ast.getParameterTypeNames().forEach(s -> {
+            paramTypes.add(Environment.getType(s));
+        });
+
+        Environment.Type returnType;
+        if(ast.getReturnTypeName().isPresent()) {
+            returnType = Environment.getType(ast.getReturnTypeName().get());
+        } else {
+            returnType = Environment.Type.NIL;
+        }
+
+        scope.defineFunction(ast.getName(), ast.getName(), paramTypes, returnType, args -> Environment.NIL);
+        try {
+            scope = new Scope(scope);
+            for(Ast.Stmt stmt : ast.getStatements()) {
+                visit(stmt);
+            }
+        }
+        finally {
+            scope = scope.getParent();
+        }
+
+        return null;
     }
 
     @Override
@@ -81,22 +106,71 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Stmt.If ast) {
-        throw new UnsupportedOperationException();  // TODO
+        visit(ast.getCondition());
+        if(ast.getCondition().getType() != Environment.Type.BOOLEAN || ast.getThenStatements().isEmpty()) {
+            throw new RuntimeException();
+        }
+
+        for(Ast.Stmt then : ast.getThenStatements()) {
+            try {
+                scope = new Scope(scope);
+                visit(then);
+            }
+            finally {
+                scope = scope.getParent();
+            }
+        }
+        for(Ast.Stmt elseStmt: ast.getElseStatements()) {
+            try {
+                scope = new Scope(scope);
+                visit(elseStmt);
+            }
+            finally {
+                scope = scope.getParent();
+            }
+        }
+        return null;
     }
 
     @Override
     public Void visit(Ast.Stmt.For ast) {
-        throw new UnsupportedOperationException();  // TODO
+        visit(ast.getValue());
+        if(ast.getValue().getType() != Environment.Type.INTEGER_ITERABLE || ast.getStatements().isEmpty()) {
+            throw new RuntimeException();
+        }
+        try {
+            scope = new Scope(scope);
+            for(Ast.Stmt stmt : ast.getStatements()) {
+                visit(stmt);
+            }
+            scope.defineVariable(ast.getName(), ast.getName(), Environment.Type.INTEGER, Environment.NIL);
+        }
+        finally {
+            scope = scope.getParent();
+        }
+        return null;
+//        throw new UnsupportedOperationException();  // TODO
     }
 
     @Override
     public Void visit(Ast.Stmt.While ast) {
-        throw new UnsupportedOperationException();  // TODO
+        visit(ast.getCondition());
+        if(ast.getCondition().getType() != Environment.Type.BOOLEAN) {
+            scope = new Scope(scope);
+            for(Ast.Stmt stmt : ast.getStatements()) {
+                visit(stmt);
+            }
+        }
+        return null;
+//        throw new UnsupportedOperationException();  // TODO
     }
 
     @Override
     public Void visit(Ast.Stmt.Return ast) {
-        throw new UnsupportedOperationException();  // TODO
+        if(ast.getValue().getType() != returnType.getType()) {
+            throw new RuntimeException();
+        }
+        return null;
     }
 
     @Override
