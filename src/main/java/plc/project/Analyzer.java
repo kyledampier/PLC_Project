@@ -222,7 +222,42 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Expr.Function ast) {
-        throw new UnsupportedOperationException();  // TODO
+
+        if (ast.getReceiver().isPresent()) {
+            // is Method
+            Ast.Expr expr = ast.getReceiver().get();
+            visit(expr);
+
+            Environment.Function func = expr.getType().getMethod(ast.getName(), ast.getArguments().size());
+
+            List<Ast.Expr> args = ast.getArguments();
+            List<Environment.Type> argTypes = func.getParameterTypes();
+
+            // starts at 1
+            for (int i = 1; i < args.size(); i++) {
+                visit(args.get(i));
+                requireAssignable(argTypes.get(i), args.get(i).getType());
+            }
+
+            ast.setFunction(func);
+        } else {
+            // is Function
+
+            Environment.Function func = scope.lookupFunction(ast.getName(), ast.getArguments().size());
+
+            List<Ast.Expr> args = ast.getArguments();
+            List<Environment.Type> argTypes = func.getParameterTypes();
+
+            // starts at 0
+            for (int i = 0; i < args.size(); i++) {
+                visit(args.get(i));
+                requireAssignable(argTypes.get(i), args.get(i).getType());
+            }
+
+            ast.setFunction(func);
+        }
+
+        return null;
     }
 
     public static void requireAssignable(Environment.Type target, Environment.Type type) {
