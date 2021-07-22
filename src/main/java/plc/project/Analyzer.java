@@ -28,12 +28,41 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Source ast) {
-        throw new UnsupportedOperationException();  // TODO
+        if(scope.lookupFunction("main", 0) != null && scope.lookupFunction("main", 0).getReturnType() == Environment.Type.INTEGER) {
+            for(Ast.Field field : ast.getFields()) {
+                visit(field);
+            }
+            for(Ast.Method method : ast.getMethods()) {
+                visit(method);
+            }
+        } else {
+            throw new RuntimeException();
+        }
+        return null;
     }
 
     @Override
     public Void visit(Ast.Field ast) {
-        throw new UnsupportedOperationException();  // TODO
+        if (ast.getValue().isPresent()) {
+
+            Ast.Expr value = ast.getValue().get();
+            Environment.Type target = Environment.getType(ast.getTypeName());
+            if (value.getType() == target ||
+                    target == Environment.Type.ANY ||
+                    (target == Environment.Type.COMPARABLE && (value.getType() == Environment.Type.INTEGER ||
+                            value.getType() == Environment.Type.DECIMAL ||
+                            value.getType() == Environment.Type.STRING ||
+                            value.getType() == Environment.Type.CHARACTER)
+                    )
+            ) {
+                // field value is assignable
+                visit(ast.getValue().get());
+            } else {
+                throw new RuntimeException();
+            }
+            ast.setVariable(scope.defineVariable(ast.getName(), ast.getName(), Environment.getType(ast.getTypeName()), Environment.NIL));
+        }
+        return null;
     }
 
     @Override
@@ -44,7 +73,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
         });
 
         Environment.Type returnType;
-        if(ast.getReturnTypeName().isPresent()) {
+        if (ast.getReturnTypeName().isPresent()) {
             returnType = Environment.getType(ast.getReturnTypeName().get());
         } else {
             returnType = Environment.Type.NIL;
@@ -54,15 +83,14 @@ public final class Analyzer implements Ast.Visitor<Void> {
         try {
             scope = new Scope(scope);
 
-            for(int i = 0; i < ast.getParameters().size(); i++) {
+            for (int i = 0; i < ast.getParameters().size(); i++) {
                 scope.defineVariable(ast.getParameters().get(i), ast.getParameters().get(i), paramTypes.get(i), Environment.NIL);
             }
 
-            for(Ast.Stmt stmt : ast.getStatements()) {
+            for (Ast.Stmt stmt : ast.getStatements()) {
                 visit(stmt);
             }
-        }
-        finally {
+        } finally {
             scope = scope.getParent();
         }
 
@@ -81,11 +109,11 @@ public final class Analyzer implements Ast.Visitor<Void> {
     @Override
     public Void visit(Ast.Stmt.Declaration ast) {
 
-        if (!ast.getTypeName().isPresent() && !ast.getValue().isPresent()) {
+        if (ast.getTypeName().isEmpty() && ast.getValue().isEmpty()) {
             throw new RuntimeException("Expected type or value when declaring a variable.");
         }
 
-        Environment.Type type =  null;
+        Environment.Type type = null;
 
         if (ast.getTypeName().isPresent()) {
             type = Environment.getType(ast.getTypeName().get());
@@ -126,25 +154,23 @@ public final class Analyzer implements Ast.Visitor<Void> {
     @Override
     public Void visit(Ast.Stmt.If ast) {
         visit(ast.getCondition());
-        if(ast.getCondition().getType() != Environment.Type.BOOLEAN || ast.getThenStatements().isEmpty()) {
+        if (ast.getCondition().getType() != Environment.Type.BOOLEAN || ast.getThenStatements().isEmpty()) {
             throw new RuntimeException();
         }
 
-        for(Ast.Stmt then : ast.getThenStatements()) {
+        for (Ast.Stmt then : ast.getThenStatements()) {
             try {
                 scope = new Scope(scope);
                 visit(then);
-            }
-            finally {
+            } finally {
                 scope = scope.getParent();
             }
         }
-        for(Ast.Stmt elseStmt: ast.getElseStatements()) {
+        for (Ast.Stmt elseStmt : ast.getElseStatements()) {
             try {
                 scope = new Scope(scope);
                 visit(elseStmt);
-            }
-            finally {
+            } finally {
                 scope = scope.getParent();
             }
         }
@@ -154,39 +180,37 @@ public final class Analyzer implements Ast.Visitor<Void> {
     @Override
     public Void visit(Ast.Stmt.For ast) {
         visit(ast.getValue());
-        if(ast.getValue().getType() != Environment.Type.INTEGER_ITERABLE || ast.getStatements().isEmpty()) {
+        if (ast.getValue().getType() != Environment.Type.INTEGER_ITERABLE || ast.getStatements().isEmpty()) {
             throw new RuntimeException();
         }
         try {
             scope = new Scope(scope);
-            for(Ast.Stmt stmt : ast.getStatements()) {
+            for (Ast.Stmt stmt : ast.getStatements()) {
                 visit(stmt);
             }
             scope.defineVariable(ast.getName(), ast.getName(), Environment.Type.INTEGER, Environment.NIL);
-        }
-        finally {
+        } finally {
             scope = scope.getParent();
         }
         return null;
-//        throw new UnsupportedOperationException();  // TODO
     }
 
     @Override
     public Void visit(Ast.Stmt.While ast) {
         visit(ast.getCondition());
-        if(ast.getCondition().getType() != Environment.Type.BOOLEAN) {
+        if (ast.getCondition().getType() != Environment.Type.BOOLEAN) {
             scope = new Scope(scope);
-            for(Ast.Stmt stmt : ast.getStatements()) {
+            for (Ast.Stmt stmt : ast.getStatements()) {
                 visit(stmt);
             }
         }
         return null;
-//        throw new UnsupportedOperationException();  // TODO
+
     }
 
     @Override
     public Void visit(Ast.Stmt.Return ast) {
-        if(ast.getValue().getType() != returnType.getType()) {
+        if (ast.getValue().getType() != returnType.getType()) {
             throw new RuntimeException();
         }
         return null;
@@ -209,7 +233,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
         if (literal instanceof String)
             ast.setType(Environment.Type.STRING);
 
-        if (literal instanceof BigInteger){
+        if (literal instanceof BigInteger) {
             // Check for size
             BigInteger value = (BigInteger) literal;
             if (value.compareTo(BigInteger.valueOf(Integer.MAX_VALUE)) <= 0 &&
@@ -222,7 +246,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
         }
 
 
-        if (literal instanceof BigDecimal){
+        if (literal instanceof BigDecimal) {
             // Check for size
             BigDecimal value = (BigDecimal) literal;
             if (value.compareTo(BigDecimal.valueOf(Double.MAX_VALUE)) <= 0 &&
@@ -255,14 +279,20 @@ public final class Analyzer implements Ast.Visitor<Void> {
         visit(right);
 
         switch (ast.getOperator()) {
-            case "AND": case "OR":
+            case "AND":
+            case "OR":
                 if (left.getType() == Environment.Type.BOOLEAN &&
                         right.getType() == Environment.Type.BOOLEAN) {
                     ast.setType(Environment.Type.BOOLEAN);
                     return null;
                 }
                 throw new RuntimeException("Boolean Type Expected");
-            case "<": case "<=": case ">": case ">=": case "==": case "!=":
+            case "<":
+            case "<=":
+            case ">":
+            case ">=":
+            case "==":
+            case "!=":
                 requireAssignable(Environment.Type.COMPARABLE, left.getType());
                 requireAssignable(Environment.Type.COMPARABLE, right.getType());
                 requireAssignable(left.getType(), right.getType());
@@ -275,7 +305,9 @@ public final class Analyzer implements Ast.Visitor<Void> {
                     ast.setType(Environment.Type.STRING);
                     break;
                 }
-            case "-": case "*": case "/": // case '+': if not a STRING
+            case "-":
+            case "*":
+            case "/": // case '+': if not a STRING
 
                 // The left hand side must be an Integer/Decimal and
                 // both the right hand side and result type are the same as the left.
@@ -359,7 +391,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
                 return;
             case "Comparable":
                 if (type.getName().equals("Integer") ||
-                        type.getName().equals("Decimal")||
+                        type.getName().equals("Decimal") ||
                         type.getName().equals("Character") ||
                         type.getName().equals("String"))
                     return;
