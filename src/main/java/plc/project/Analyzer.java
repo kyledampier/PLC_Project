@@ -43,10 +43,11 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Field ast) {
-        if (ast.getValue().isPresent()) {
-
+        if (ast.getValue().isPresent()) { // if present, visit before defining variable
             Ast.Expr value = ast.getValue().get();
             Environment.Type target = Environment.getType(ast.getTypeName());
+
+            // check if the value is assignable
             if (value.getType() == target ||
                     target == Environment.Type.ANY ||
                     (target == Environment.Type.COMPARABLE && (value.getType() == Environment.Type.INTEGER ||
@@ -60,8 +61,9 @@ public final class Analyzer implements Ast.Visitor<Void> {
             } else {
                 throw new RuntimeException();
             }
-            ast.setVariable(scope.defineVariable(ast.getName(), ast.getName(), Environment.getType(ast.getTypeName()), Environment.NIL));
         }
+        // defines variable
+        ast.setVariable(scope.defineVariable(ast.getName(), ast.getName(), Environment.getType(ast.getTypeName()), Environment.NIL));
         return null;
     }
 
@@ -109,7 +111,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
     @Override
     public Void visit(Ast.Stmt.Declaration ast) {
 
-        if (ast.getTypeName().isEmpty() && ast.getValue().isEmpty()) {
+        if (!ast.getTypeName().isPresent() && !ast.getValue().isPresent()) {
             throw new RuntimeException("Expected type or value when declaring a variable.");
         }
 

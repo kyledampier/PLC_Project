@@ -27,6 +27,27 @@ public final class AnalyzerTests {
 
     @ParameterizedTest(name = "{0}")
     @MethodSource
+    public void testField(String test, Ast.Field ast, Ast.Field expected) {
+        Analyzer analyzer = test(ast, expected, new Scope(null));
+    }
+
+    private static Stream<Arguments> testField() {
+        return Stream.of(
+                Arguments.of("Integer Name",
+                        new Ast.Field("name", "Integer", Optional.empty()),
+                        init(new Ast.Stmt.Field("name", "Integer", Optional.empty()), ast -> {
+                            ast.setVariable(new Environment.Variable("name", "name", Environment.Type.INTEGER, Environment.NIL));
+                        })
+                ),
+                Arguments.of("Invalid Field Declaration",
+                        new Ast.Field("name", "Decimal", Optional.of(new Ast.Expr.Literal(1))),
+                        null
+                )
+        );
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
     public void testMethod(String test, Ast.Method ast, Ast.Method expected) {
         Analyzer analyzer = test(ast, expected, new Scope(null));
         if (expected != null) {
