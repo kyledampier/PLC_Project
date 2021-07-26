@@ -74,11 +74,9 @@ public final class Analyzer implements Ast.Visitor<Void> {
             paramTypes.add(Environment.getType(s));
         });
 
-        Environment.Type returnType;
+        Environment.Type returnType = Environment.Type.NIL;
         if (ast.getReturnTypeName().isPresent()) {
             returnType = Environment.getType(ast.getReturnTypeName().get());
-        } else {
-            returnType = Environment.Type.NIL;
         }
 
         ast.setFunction(scope.defineFunction(ast.getName(), ast.getName(), paramTypes, returnType, args -> Environment.NIL));
@@ -187,10 +185,10 @@ public final class Analyzer implements Ast.Visitor<Void> {
         }
         try {
             scope = new Scope(scope);
+            scope.defineVariable(ast.getName(), ast.getName(), Environment.Type.INTEGER, Environment.NIL);
             for (Ast.Stmt stmt : ast.getStatements()) {
                 visit(stmt);
             }
-            scope.defineVariable(ast.getName(), ast.getName(), Environment.Type.INTEGER, Environment.NIL);
         } finally {
             scope = scope.getParent();
         }
