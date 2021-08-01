@@ -25,7 +25,7 @@ public final class Generator implements Ast.Visitor<Void> {
             case "Integer":
                 return "int";
             case "String":
-                return  "String";
+                return "String";
             default:
                 throw new RuntimeException("Unknown Type");
         }
@@ -50,8 +50,27 @@ public final class Generator implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Source ast) {
-        throw new UnsupportedOperationException(); //TODO
-//        return null;
+        print("public class Main {");
+        newline(0);
+        newline(1);
+        print("public static void main(String[] args) {");
+        newline(2);
+        print("System.exit(new Main().main());");
+        newline(1);
+        print("}");
+
+        for (Ast.Field field : ast.getFields()) {
+            visit(field);
+        }
+        for (Ast.Method method : ast.getMethods()) {
+            newline(0);
+            newline(1);
+            visit(method);
+        }
+        newline(0);
+        newline(0);
+        print("}");
+        return null;
     }
 
     @Override
@@ -70,8 +89,28 @@ public final class Generator implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Method ast) {
-        throw new UnsupportedOperationException(); //TODO
-//        return null;
+        if (ast.getReturnTypeName().isPresent()) {
+            print(getJvmNameFromString(ast.getReturnTypeName().get()));
+        }
+        print(" ", ast.getName(), "(");
+        int paramSize = ast.getParameters().size();
+        int typenameSize = ast.getParameterTypeNames().size();
+        if (paramSize == typenameSize && paramSize > 0) {
+            for (int i = 0; i < ast.getParameters().size() - 1; i++) {
+                print(ast.getParameterTypeNames().get(i), " ", ast.getParameters().get(i), ", ");
+            }
+            print(ast.getParameterTypeNames().get(typenameSize - 1), " ", ast.getParameters().get(paramSize - 1));
+        }
+        print(") ", "{");
+        if (!ast.getStatements().isEmpty()) {
+            for (Ast.Stmt stmt : ast.getStatements()) {
+                newline(2);
+                visit(stmt);
+            }
+            newline(1);
+        }
+        print("}");
+        return null;
     }
 
     @Override
@@ -190,7 +229,7 @@ public final class Generator implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Stmt.Return ast) {
-        print ("return ");
+        print("return ");
         visit(ast.getValue());
         print(";");
         return null;
@@ -238,11 +277,23 @@ public final class Generator implements Ast.Visitor<Void> {
     public Void visit(Ast.Expr.Binary ast) {
         visit(ast.getLeft());
         switch (ast.getOperator()) {
-            case "AND" -> print(" && ");
-            case "+" -> print(" + ");
-            case "-" -> print(" - ");
-            case "*" -> print(" * ");
-            case "/" -> print(" / ");
+            case "AND":
+                print(" && ");
+                break;
+
+            case "+":
+                print(" + ");
+                break;
+
+            case "-":
+                print(" - ");
+                break;
+            case "*":
+                print(" * ");
+                break;
+            case "/":
+                print(" / ");
+                break;
         }
         visit(ast.getRight());
         return null;
