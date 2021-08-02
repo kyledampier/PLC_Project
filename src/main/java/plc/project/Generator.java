@@ -97,9 +97,9 @@ public final class Generator implements Ast.Visitor<Void> {
         int typenameSize = ast.getParameterTypeNames().size();
         if (paramSize == typenameSize && paramSize > 0) {
             for (int i = 0; i < ast.getParameters().size() - 1; i++) {
-                print(ast.getParameterTypeNames().get(i), " ", ast.getParameters().get(i), ", ");
+                print(getJvmNameFromString(ast.getParameterTypeNames().get(i)), " ", ast.getParameters().get(i), ", ");
             }
-            print(ast.getParameterTypeNames().get(typenameSize - 1), " ", ast.getParameters().get(paramSize - 1));
+            print(getJvmNameFromString(ast.getParameterTypeNames().get(typenameSize - 1)), " ", ast.getParameters().get(paramSize - 1));
         }
         print(") ", "{");
         if (!ast.getStatements().isEmpty()) {
