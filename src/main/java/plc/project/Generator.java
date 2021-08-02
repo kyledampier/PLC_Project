@@ -51,24 +51,24 @@ public final class Generator implements Ast.Visitor<Void> {
     @Override
     public Void visit(Ast.Source ast) {
         print("public class Main {");
-        newline(0);
-        newline(1);
+        newline(indent);
+        newline(++indent);
         print("public static void main(String[] args) {");
-        newline(2);
+        newline(++indent);
         print("System.exit(new Main().main());");
-        newline(1);
+        newline(--indent);
         print("}");
 
         for (Ast.Field field : ast.getFields()) {
             visit(field);
         }
         for (Ast.Method method : ast.getMethods()) {
-            newline(0);
-            newline(1);
+            newline(--indent);
+            newline(++indent);
             visit(method);
         }
-        newline(0);
-        newline(0);
+        newline(--indent);
+        newline(indent);
         print("}");
         return null;
     }
@@ -149,7 +149,6 @@ public final class Generator implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Stmt.Assignment ast) {
-        // TODO: write tests for assignment
         visit(ast.getReceiver());
         print(" = ");
         visit(ast.getValue());
@@ -252,7 +251,7 @@ public final class Generator implements Ast.Visitor<Void> {
         } else if (ast.getType() == Environment.Type.CHARACTER) {
             // IS CHARACTER
             char loc = (char) ast.getLiteral();
-            print(loc);
+            print("'", loc, "'");
         } else if (ast.getType() == Environment.Type.DECIMAL) {
             // IS DECIMAL
             // TODO: check for decimal precision
@@ -266,7 +265,6 @@ public final class Generator implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Expr.Group ast) {
-        // TODO: write tests
         writer.write("(");
         visit(ast.getExpression());
         writer.write(")");
@@ -301,7 +299,6 @@ public final class Generator implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Expr.Access ast) {
-        // TODO: write tests for access
         if (ast.getReceiver().isPresent()) {
             // HAS RECEIVER
             visit(ast.getReceiver().get());

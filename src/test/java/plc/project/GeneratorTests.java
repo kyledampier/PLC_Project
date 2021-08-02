@@ -1,5 +1,6 @@
 package plc.project;
 
+import com.sun.tools.doclint.Env;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -10,6 +11,7 @@ import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -52,8 +54,58 @@ public class GeneratorTests {
                                 "",
                                 "}"
                         )
-                )
-        );
+                ),
+                Arguments.of("Multiple Methods",
+                        // DEF main(): Integer DO
+                        //     LET a: Decimal = area(12.2);
+                        //     print("Area: " + a);
+                        //     RETURN 0;
+                        // END
+                        // DEF area(radius: Decimal): Decimal DO
+                        //     RETURN 3.14 * radius * radius
+                        // END
+                        new Ast.Source(
+                                Collections.emptyList(),
+                                Arrays.asList(
+                                        init(new Ast.Method("main", Collections.emptyList(), Collections.emptyList(), Optional.of("Integer"), Arrays.asList(
+                                                init(new Ast.Stmt.Declaration("a", Optional.of("Decimal"), Optional.of(
+                                                        new Ast.Expr.Function(Optional.empty(), "area", Arrays.asList(
+                                                                init(new Ast.Expr.Literal(BigDecimal.valueOf(12.2)), ast -> ast.setType(Environment.Type.DECIMAL))))
+                                                )), ast -> ast.setVariable(new Environment.Variable("a", "a", Environment.Type.DECIMAL, Environment.NIL)))
+                                                )), ast -> ast.setFunction(new Environment.Function("main", "main", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL))
+                                        )),
+                                init(new Ast.Method("area", Collections.singletonList("radius"), Collections.singletonList("Decimal"), Optional.of("Decimal"), Collections.singletonList(
+                                        init(new Ast.Stmt.Return(init(new Ast.Expr.Binary("*",
+                                                init(new Ast.Expr.Literal(BigDecimal.valueOf(3.14)), ast -> ast.setType(Environment.Type.DECIMAL)),
+                                                init(new Ast.Expr.Binary("*",
+                                                        init(new Ast.Expr.Access(Optional.empty(), "radius"), ast -> ast.setVariable(new Environment.Variable("radius", "radius", Environment.Type.DECIMAL, Environment.create(12.2)))),
+                                                        init(new Ast.Expr.Access(Optional.empty(), "radius"), ast -> ast.setVariable(new Environment.Variable("radius", "radius", Environment.Type.DECIMAL, Environment.create(12.2))))
+                                                        ), ast -> ast.setType(Environment.Type.DECIMAL)
+                                                )), ast -> ast.setType(Environment.Type.DECIMAL)
+                                        )))
+                                        ))
+                                ),
+                                String.join(System.lineSeparator(),
+                                        "public class Main {",
+                                        "",
+                                        "    public static void main(String[] args) {",
+                                        "        System.exit(new Main().main());",
+                                        "    }",
+                                        "",
+                                        "    int main() {",
+                                        "        double a = area(12.2);",
+                                        "        System.out.println(\"Area\" + a);",
+                                        "        return 0;",
+                                        "    }",
+                                        "",
+                                        "    double area(double radius) {",
+                                        "        return 3.14 * radius * radius;",
+                                        "    }",
+                                        "",
+                                        "}"
+                                )
+                        )
+                );
     }
 
     @ParameterizedTest(name = "{0}")
@@ -72,9 +124,9 @@ public class GeneratorTests {
                 Arguments.of("Initialization",
                         // LET name = 1.0;
                         init(new Ast.Stmt.Declaration("name", Optional.empty(), Optional.of(
-                                init(new Ast.Expr.Literal(new BigDecimal("1.0")),ast -> ast.setType(Environment.Type.DECIMAL))
+                                init(new Ast.Expr.Literal(new BigDecimal("123.456")), ast -> ast.setType(Environment.Type.DECIMAL))
                         )), ast -> ast.setVariable(new Environment.Variable("name", "name", Environment.Type.DECIMAL, Environment.NIL))),
-                        "double name = 1.0;"
+                        "double name = 123.456;"
                 )
         );
     }
