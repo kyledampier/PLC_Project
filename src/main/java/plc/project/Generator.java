@@ -191,12 +191,12 @@ public final class Generator implements Ast.Visitor<Void> {
     public Void visit(Ast.Stmt.For ast) {
         print("for (");
         // for (jvmName name : value) {
-        print(ast.getValue().getType().getJvmName(), " ", ast.getName());
-        print(" : ");
+//        print(ast.getValue().getType().getJvmName(), " ", ast.getName(), " : ");
+        print("Iterable<Integer> ", ast.getName(), " : ");
+//        print(" : ");
         visit(ast.getValue());
         print(") {");
         indent++;
-
         // all statements
         for (Ast.Stmt stmt : ast.getStatements()) {
             newline(indent);
