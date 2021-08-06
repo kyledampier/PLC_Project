@@ -103,11 +103,12 @@ public final class Generator implements Ast.Visitor<Void> {
         }
         print(") ", "{");
         if (!ast.getStatements().isEmpty()) {
+            indent++;
             for (Ast.Stmt stmt : ast.getStatements()) {
-                newline(2);
+                newline(indent);
                 visit(stmt);
             }
-            newline(1);
+            newline(--indent);
         }
         print("}");
         return null;
