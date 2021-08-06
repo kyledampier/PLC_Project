@@ -211,7 +211,7 @@
       <workItem from="1627678220532" duration="102000" />
       <workItem from="1627678335033" duration="154000" />
       <workItem from="1627678502015" duration="8006000" />
-      <workItem from="1628180632034" duration="610000" />
+      <workItem from="1628180632034" duration="1450000" />
     </task>
     <task id="LOCAL-00001" summary="chagned commit to not track /.idea/">
       <created>1627914168718</created>
@@ -220,7 +220,14 @@
       <option name="project" value="LOCAL" />
       <updated>1627914168718</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Kyle's local file changes so it builds and runs">
+      <created>1628273807895</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1628273807895</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -240,6 +247,7 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="chagned commit to not track /.idea/" />
-    <option name="LAST_COMMIT_MESSAGE" value="chagned commit to not track /.idea/" />
+    <MESSAGE value="Kyle's local file changes so it builds and runs" />
+    <option name="LAST_COMMIT_MESSAGE" value="Kyle's local file changes so it builds and runs" />
   </component>
 </project>
