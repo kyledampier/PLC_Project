@@ -85,11 +85,11 @@ public class GeneratorTests {
                                                 new Ast.Stmt.Expression(
                                                         init(new Ast.Expr.Function(Optional.empty(), "print", Arrays.asList(
                                                                 init(new Ast.Expr.Binary("+",
-                                                                        init(new Ast.Expr.Literal("Area: "), ast -> ast.setType(Environment.Type.STRING)),
-                                                                        init(new Ast.Expr.Access(Optional.empty(), "a"), ast -> ast.setVariable(new Environment.Variable("a", "a", Environment.Type.DECIMAL, Environment.create((12.2 * 12.2 * 3.14)))))),
+                                                                                init(new Ast.Expr.Literal("Area: "), ast -> ast.setType(Environment.Type.STRING)),
+                                                                                init(new Ast.Expr.Access(Optional.empty(), "a"), ast -> ast.setVariable(new Environment.Variable("a", "a", Environment.Type.DECIMAL, Environment.create((12.2 * 12.2 * 3.14)))))),
                                                                         ast -> ast.setType(Environment.Type.STRING))
 
-                                                )), ast -> ast.setFunction(new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL)))),
+                                                        )), ast -> ast.setFunction(new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL)))),
 
                                                 new Ast.Stmt.Return(init(new Ast.Expr.Literal(BigInteger.ZERO), ast -> ast.setType(Environment.Type.INTEGER)))
 
@@ -141,6 +141,37 @@ public class GeneratorTests {
                 )
         );
     }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
+    void testForStatement(String test, Ast.Stmt.For ast, String expected) {
+        test(ast, expected);
+    }
+
+    private static Stream<Arguments> testForStatement() {
+        return Stream.of(
+                Arguments.of("For",
+
+                        // FOR num IN list DO
+                        //      print(num)
+                        // END
+                        new Ast.Stmt.For(
+                                "num",
+                                init(new Ast.Expr.Access(Optional.empty(), "list"), ast -> ast.setVariable(new Environment.Variable("list", "list", Environment.Type.ANY, Environment.NIL))),
+                                Arrays.asList(new Ast.Stmt.Expression(init(new Ast.Expr.Function(Optional.empty(), "print", Arrays.asList(
+                                        init(new Ast.Expr.Access(Optional.empty(), "num"), ast -> ast.setVariable(new Environment.Variable("num", "num", Environment.Type.INTEGER, Environment.NIL)))
+                                )), ast -> ast.setFunction(new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL)))))
+                        ),
+                        String.join(System.lineSeparator(),
+                                "for (Iterable<Integer> num : list) {",
+                                "    System.out.println(num);",
+                                "}"
+                        )
+                )
+
+        );
+    }
+
 
     @ParameterizedTest(name = "{0}")
     @MethodSource
