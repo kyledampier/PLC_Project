@@ -163,7 +163,7 @@ public class GeneratorTests {
                                 )), ast -> ast.setFunction(new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL)))))
                         ),
                         String.join(System.lineSeparator(),
-                                "for (Iterable<Integer> num : list) {",
+                                "for (int num : list) {",
                                 "    System.out.println(num);",
                                 "}"
                         )

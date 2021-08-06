@@ -192,7 +192,7 @@ public final class Generator implements Ast.Visitor<Void> {
         print("for (");
         // for (jvmName name : value) {
 //        print(ast.getValue().getType().getJvmName(), " ", ast.getName(), " : ");
-        print("Iterable<Integer> ", ast.getName(), " : ");
+        print(getJvmNameFromString("int"), ast.getName(), " : ");
 //        print(" : ");
         visit(ast.getValue());
         print(") {");
