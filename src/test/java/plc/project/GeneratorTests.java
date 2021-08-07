@@ -139,8 +139,31 @@ public class GeneratorTests {
                 //    print(z);
                 // END
                 Arguments.of("Multiple Statements",
-                        new Ast.Method("func", Arrays.asList("x", "y", "z")))
-        );
+                        init(new Ast.Method("func", Arrays.asList("x", "y", "z"), Arrays.asList("Integer", "Decimal", "String"), Optional.of("Nil"), Arrays.asList(
+                                new Ast.Stmt.Expression(
+                                        init(new Ast.Expr.Function(Optional.empty(), "print", Arrays.asList(init(new Ast.Expr.Access(Optional.empty(), "x"),
+                                                ast -> ast.setVariable(new Environment.Variable("x", "x", Environment.Type.INTEGER, Environment.NIL))))),
+                                                ast -> ast.setFunction(new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.INTEGER), Environment.Type.NIL, args -> Environment.NIL)))
+                                ),
+                                new Ast.Stmt.Expression(
+                                        init(new Ast.Expr.Function(Optional.empty(), "print", Arrays.asList(init(new Ast.Expr.Access(Optional.empty(), "y"),
+                                                ast -> ast.setVariable(new Environment.Variable("y", "y", Environment.Type.DECIMAL, Environment.NIL))))),
+                                                ast -> ast.setFunction(new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.DECIMAL), Environment.Type.NIL, args -> Environment.NIL)))
+                                ),
+                                new Ast.Stmt.Expression(
+                                        init(new Ast.Expr.Function(Optional.empty(), "print", Arrays.asList(init(new Ast.Expr.Access(Optional.empty(), "z"),
+                                                ast -> ast.setVariable(new Environment.Variable("z", "z", Environment.Type.STRING, Environment.NIL))))),
+                                                ast -> ast.setFunction(new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.STRING), Environment.Type.NIL, args -> Environment.NIL)))
+                                )
+                        )), ast -> ast.setFunction(
+                                new Environment.Function("func", "func", Arrays.asList(Environment.Type.INTEGER, Environment.Type.DECIMAL, Environment.Type.STRING), Environment.Type.INTEGER, args -> Environment.NIL))),
+                        String.join(System.lineSeparator(),
+                                "Void func(int x, double y, String z) {",
+                                "    System.out.println(x);",
+                                "    System.out.println(y);",
+                                "    System.out.println(z);",
+                                "}")
+                ));
     }
 
     @ParameterizedTest(name = "{0}")
