@@ -139,7 +139,7 @@ public class GeneratorTests {
                 //    print(z);
                 // END
                 Arguments.of("Multiple Statements",
-                        new Ast.Method("func", Arrays.asList("x", "y", "z")))
+                        new Ast.Method("func", Arrays.asList("x", "y", "z"), Arrays.asList()))
         );
     }
 
