@@ -179,6 +179,7 @@ public final class Generator implements Ast.Visitor<Void> {
             for (Ast.Stmt statement : ast.getElseStatements()) {
                 newline(indent);
                 visit(statement);
+                //while (...) {}
             }
 
         }
@@ -194,7 +195,7 @@ public final class Generator implements Ast.Visitor<Void> {
         print("for (");
         // for (jvmName name : value) {
 //        print(ast.getValue().getType().getJvmName(), " ", ast.getName(), " : ");
-        print("int ", ast.getName(), " : ");
+        print(ast.getValue().getType().getJvmName(), ast.getName(), " : ");
 //        print(" : ");
         visit(ast.getValue());
         print(") {");
@@ -280,11 +281,12 @@ public final class Generator implements Ast.Visitor<Void> {
             case "AND":
                 print(" && ");
                 break;
-
+            case "OR":
+                print(" || ");
+                break;
             case "+":
                 print(" + ");
                 break;
-
             case "-":
                 print(" - ");
                 break;
@@ -293,6 +295,9 @@ public final class Generator implements Ast.Visitor<Void> {
                 break;
             case "/":
                 print(" / ");
+                break;
+            default:
+                print(" ", ast.getOperator(), " ");
                 break;
         }
         visit(ast.getRight());
