@@ -121,6 +121,30 @@ public class GeneratorTests {
 
     @ParameterizedTest(name = "{0}")
     @MethodSource
+    void testMethodStatement(String test, Ast.Stmt.Method ast, String expected) {
+        test(ast, expected);
+    }
+
+    private static Stream<Arguments> testMethodStatement() {
+        return Stream.of(
+                // DEF empty() DO
+                // END
+                Arguments.of("Empty Statements Method",
+                        new Ast.Method("empty", Collections.emptyList(), Collections.emptyList(), Optional.of("Nil"), Collections.emptyList()),
+                        String.join(System.lineSeparator(), "Void empty() {}")
+                ),
+                // DEF func(x: Integer, y: Decimal, z: String) DO
+                //    print(x);
+                //    print(y);
+                //    print(z);
+                // END
+                Arguments.of("Multiple Statements",
+                        new Ast.Method("func", Arrays.asList("x", "y", "z")))
+        );
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
     void testDeclarationStatement(String test, Ast.Stmt.Declaration ast, String expected) {
         test(ast, expected);
     }

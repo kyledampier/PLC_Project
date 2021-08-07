@@ -15,20 +15,21 @@ public final class Generator implements Ast.Visitor<Void> {
     }
 
     public static String getJvmNameFromString(String typeName) {
-        switch (typeName) {
-            case "Boolean":
-                return "boolean";
-            case "Character":
-                return "char";
-            case "Decimal":
-                return "double";
-            case "Integer":
-                return "int";
-            case "String":
-                return "String";
-            default:
-                throw new RuntimeException("Unknown Type");
-        }
+        return Environment.getType(typeName).getJvmName();
+//        switch (typeName) {
+//            case "Boolean":
+//                return "boolean";
+//            case "Character":
+//                return "char";
+//            case "Decimal":
+//                return "double";
+//            case "Integer":
+//                return "int";
+//            case "String":
+//                return "String";
+//            default:
+//                throw new RuntimeException("Unknown Type");
+//        }
     }
 
     private void print(Object... objects) {
@@ -193,7 +194,7 @@ public final class Generator implements Ast.Visitor<Void> {
         print("for (");
         // for (jvmName name : value) {
 //        print(ast.getValue().getType().getJvmName(), " ", ast.getName(), " : ");
-        print(getJvmNameFromString("int"), ast.getName(), " : ");
+        print("int ", ast.getName(), " : ");
 //        print(" : ");
         visit(ast.getValue());
         print(") {");
