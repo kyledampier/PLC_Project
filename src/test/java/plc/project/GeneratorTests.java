@@ -25,6 +25,33 @@ public class GeneratorTests {
 
     private static Stream<Arguments> testSource() {
         return Stream.of(
+                Arguments.of("Single Field",
+                        new Ast.Source(
+                                Arrays.asList(init(new Ast.Field("field", "Integer", Optional.of(init(new Ast.Expr.Literal(new BigInteger(String.valueOf(10))), ast -> ast.setType(Environment.Type.INTEGER)))),
+                                        ast -> ast.setVariable(new Environment.Variable("field", "field", Environment.Type.INTEGER, Environment.NIL)))),
+                                Arrays.asList(init(new Ast.Method("main", Arrays.asList(), Arrays.asList(), Optional.of("Integer"), Arrays.asList(
+                                        new Ast.Stmt.Expression(init(new Ast.Expr.Function(Optional.empty(), "print", Arrays.asList(
+                                                init(new Ast.Expr.Access(Optional.empty(), "field"), ast -> ast.setVariable(new Environment.Variable("field", "field", Environment.Type.INTEGER, Environment.create(10))))
+                                        )), ast -> ast.setFunction(new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.INTEGER), Environment.Type.NIL, args -> Environment.NIL)))),
+                                        new Ast.Stmt.Return(init(new Ast.Expr.Literal(BigInteger.ZERO), ast -> ast.setType(Environment.Type.INTEGER)))
+                                )), ast -> ast.setFunction(new Environment.Function("main", "main", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL))))
+                        ),
+                        String.join(System.lineSeparator(),
+                                "public class Main {",
+                                "",
+                                "    int field = 10;",
+                                "    public static void main(String[] args) {",
+                                "        System.exit(new Main().main());",
+                                "    }",
+                                "",
+                                "    int main() {",
+                                "        System.out.println(field);",
+                                "        return 0;",
+                                "    }",
+                                "",
+                                "}")
+
+                ),
                 Arguments.of("Hello, World!",
                         // DEF main(): Integer DO
                         //     print("Hello, World!");
@@ -214,7 +241,17 @@ public class GeneratorTests {
                                 "    System.out.println(num);",
                                 "}"
                         )
-                )
+                ),
+                Arguments.of("Empty Statements",
+                        new Ast.Stmt.For(
+                                "num",
+                                init(new Ast.Expr.Access(Optional.empty(), "list"), ast -> ast.setVariable(new Environment.Variable("list", "list", Environment.Type.INTEGER_ITERABLE, Environment.NIL))),
+                                Collections.emptyList()
+                        ),
+                        String.join(System.lineSeparator(),
+                                "for (int num : list) {}"
+                                )
+                        )
 
         );
     }
