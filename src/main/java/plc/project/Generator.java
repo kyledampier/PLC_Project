@@ -195,7 +195,7 @@ public final class Generator implements Ast.Visitor<Void> {
         print("for (");
         // for (jvmName name : value) {
 //        print(ast.getValue().getType().getJvmName(), " ", ast.getName(), " : ");
-        print(ast.getValue().getType().getJvmName(), ast.getName(), " : ");
+        print("int ", ast.getName(), " : ");
 //        print(" : ");
         visit(ast.getValue());
         print(") {");
@@ -219,12 +219,13 @@ public final class Generator implements Ast.Visitor<Void> {
         indent++;
 
         // visit all statements
-        for (Ast.Stmt stmt : ast.getStatements()) {
-            newline(indent);
-            visit(stmt);
+        if(!ast.getStatements().isEmpty()) {
+            for (Ast.Stmt stmt : ast.getStatements()) {
+                newline(indent);
+                visit(stmt);
+            }
+            newline(--indent);
         }
-
-        newline(--indent);
         print("}");
         return null;
     }

@@ -204,7 +204,7 @@ public class GeneratorTests {
                         // END
                         new Ast.Stmt.For(
                                 "num",
-                                init(new Ast.Expr.Access(Optional.empty(), "list"), ast -> ast.setVariable(new Environment.Variable("list", "list", Environment.Type.ANY, Environment.NIL))),
+                                init(new Ast.Expr.Access(Optional.empty(), "list"), ast -> ast.setVariable(new Environment.Variable("list", "list", Environment.Type.INTEGER_ITERABLE, Environment.NIL))),
                                 Arrays.asList(new Ast.Stmt.Expression(init(new Ast.Expr.Function(Optional.empty(), "print", Arrays.asList(
                                         init(new Ast.Expr.Access(Optional.empty(), "num"), ast -> ast.setVariable(new Environment.Variable("num", "num", Environment.Type.INTEGER, Environment.NIL)))
                                 )), ast -> ast.setFunction(new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL)))))
@@ -218,6 +218,30 @@ public class GeneratorTests {
 
         );
     }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
+    void testWhileStatement(String test, Ast.Stmt.While ast, String expected) {
+        test(ast, expected);
+    }
+
+    private static Stream<Arguments> testWhileStatement() {
+        return Stream.of(
+                Arguments.of("Empty Statements",
+                        new Ast.Stmt.While(
+                                init(new Ast.Expr.Binary("<",
+                                        init(new Ast.Expr.Access(Optional.empty(), "i"), ast -> ast.setVariable(new Environment.Variable("i", "i", Environment.Type.INTEGER, Environment.NIL))),
+                                        init(new Ast.Expr.Literal(new BigInteger(String.valueOf(10))), ast -> ast.setType(Environment.Type.INTEGER))),
+                                        ast -> ast.setType(Environment.Type.BOOLEAN)),
+                                Collections.emptyList()
+                        ),
+                        String.join(System.lineSeparator(),
+                                "while (i < 10) {}")
+                )
+        );
+    }
+
+
 
 
     @ParameterizedTest(name = "{0}")
